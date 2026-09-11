@@ -3,131 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tank Playtest - T-Series Gunner Role</title>
+    <title>Tank Playtest - War Thunder Style Gunner Sight</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #111;
+            background-color: #000;
             font-family: monospace;
             touch-action: none;
+            user-select: none;
         }
-        /* Tâm ngắm pháo thủ phong cách kính ngắm liên xô */
-        #crosshair {
+
+        /* --- ỐNG NGẮM QUANG HỌC (GUNNER SIGHT) --- */
+        #optic-overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 90px;
-            height: 90px;
-            transform: translate(-50%, -50%);
-            border: 2px solid rgba(255, 165, 0, 0.7);
-            border-radius: 50%;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-        #crosshair::before {
-            content: '';
-            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 2px;
-            background-color: rgba(255, 165, 0, 0.5);
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        #crosshair::after {
-            content: '';
+
+        /* Tâm ngắm chữ thập chi tiết */
+        .crosshair-v {
             position: absolute;
             width: 2px;
             height: 100%;
-            background-color: rgba(255, 165, 0, 0.5);
+            background: rgba(0, 255, 0, 0.4);
         }
-        /* Bảng HUD thông tin kiểu T-Series */
-        #hud {
+        .crosshair-h {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            color: #ffa500;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 8px 12px;
-            border: 1px solid #ffa500;
-            border-radius: 4px;
-            pointer-events: none;
-            z-index: 10;
-            font-size: 11px;
-            line-height: 1.4;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 0, 0.4);
         }
-        /* Các nút bấm ảo mobile */
+
+        /* Vạch thước ngắm dọc (Ballistic Reticle) */
+        .reticle-ladder {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #00ff00;
+            font-size: 11px;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .tick {
+            width: 12px;
+            height: 2px;
+            background: #00ff00;
+            margin: 8px 0;
+            position: relative;
+        }
+        .tick::after {
+            content: attr(data-val);
+            position: absolute;
+            left: 16px;
+            top: -6px;
+            font-size: 10px;
+        }
+
+        /* Thước ngắm ngang */
+        .reticle-horizontal {
+            position: absolute;
+            top: 50%;
+            width: 300px;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+            color: #00ff00;
+            font-size: 9px;
+            transform: translateY(-20px);
+        }
+
+        /* --- HUD THÔNG TIN & X-RAY MODULE (GÓC TRÁI) --- */
+        #hud-top {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 5px 10px;
+            border-left: 3px solid #00ff00;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        #xray-box {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 110px;
+            height: 130px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444;
+            border-radius: 6px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .tank-silhouette {
+            width: 70px;
+            height: 90px;
+            border: 1px dashed #666;
+            position: relative;
+            background: rgba(255,255,255,0.03);
+        }
+        .module {
+            position: absolute;
+            background: #00ff00;
+            border-radius: 2px;
+        }
+        #mod-engine { bottom: 10px; left: 20px; width: 30px; height: 20px; }
+        #mod-ammo { top: 20px; left: 25px; width: 20px; height: 35px; background: #ffaa00; }
+        #mod-gunner { top: 35px; right: 15px; width: 12px; height: 12px; border-radius: 50%; }
+
+        /* --- GIAO DIỆN NÚT BẤM ĐIỀU KHIỂN MOBILE --- # */
         .mobile-controls {
             position: absolute;
             bottom: 20px;
             right: 20px;
             display: flex;
-            gap: 15px;
+            gap: 12px;
             z-index: 100;
         }
         .control-btn {
-            width: 75px;
-            height: 75px;
+            width: 70px;
+            height: 70px;
             background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #ffa500;
+            border: 2px solid #00ff00;
             border-radius: 50%;
-            color: #ffa500;
-            font-size: 13px;
+            color: #00ff00;
+            font-size: 12px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            user-select: none;
             cursor: pointer;
             backdrop-filter: blur(4px);
         }
         .control-btn:active {
-            background: rgba(255, 165, 0, 0.3);
-            transform: scale(0.95);
+            background: rgba(0, 255, 0, 0.3);
         }
         #fire-btn {
-            background: rgba(139, 0, 0, 0.7);
+            background: rgba(139, 0, 0, 0.8);
             border-color: #ff4444;
             color: #ff4444;
+            width: 80px;
+            height: 80px;
         }
+
+        /* Khu vực cảm ứng vuốt màn hình */
         #touch-area {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
+            z-index: 5;
         }
     </style>
 </head>
 <body>
 
-    <div id="crosshair"></div>
-    <div id="hud">
-        DÒNG TĂNG: T-SERIES (Autoloader)<br>
-        VAI TRÒ: PHÁO THỦ (GUNNER)<br>
-        ĐẶC TÍNH: Góc hạ nòng thấp (Hạn chế địa hình dốc)
+    <!-- HUD Thông số & Cự ly -->
+    <div id="hud-top">
+        ĐẠN: <span id="ammo-type" style="color:#ffaa00;">L31A7 HESH</span> | NẠP: <span style="color:#00ff00;">SẴN SÀNG</span><br>
+        CỰ LY MỤC TIÊU: <span id="range-text">334m</span>
+    </div>
+
+    <!-- Khung X-Ray Mô-đun xe (Góc trái) -->
+    <div id="xray-box">
+        <div style="font-size: 9px; color: #aaa; margin-bottom: 4px;">X-RAY MODULE</div>
+        <div class="tank-silhouette">
+            <div class="module" id="mod-engine" title="Engine"></div>
+            <div class="module" id="mod-ammo" title="Ammo Rack"></div>
+            <div class="module" id="mod-gunner" title="Crew"></div>
+        </div>
+    </div>
+
+    <!-- Ống ngắm quang học mô phỏng War Thunder -->
+    <div id="optic-overlay">
+        <div class="crosshair-v"></div>
+        <div class="crosshair-h"></div>
+        
+        <!-- Thước ngắm dọc chia độ -->
+        <div class="reticle-ladder">
+            <div class="tick" data-val="2"></div>
+            <div class="tick" data-val="4"></div>
+            <div class="tick" data-val="6"></div>
+            <div class="tick" data-val="8"></div>
+            <div class="tick" data-val="10"></div>
+            <div class="tick" data-val="12"></div>
+        </div>
+
+        <!-- Thước ngang -->
+        <div class="reticle-horizontal">
+            <span>-20</span><span>-10</span><span>0</span><span>+10</span><span>+20</span>
+        </div>
     </div>
 
     <div id="touch-area"></div>
 
+    <!-- Nút điều khiển mobile -->
     <div class="mobile-controls">
         <div class="control-btn" id="left-btn">XOAY<br>TRÁI</div>
         <div class="control-btn" id="right-btn">XOAY<br>PHẢI</div>
-        <div class="control-btn" id="fire-btn">BẮN!<br>(FIRE)</div>
+        <div class="control-btn" id="fire-btn">BẮN<br>(FIRE)</div>
     </div>
 
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
-        // 1. Khởi tạo Scene & Renderer
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x151515);
+        scene.background = new THREE.Color(0x111611);
 
-        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
@@ -135,37 +235,35 @@
         // Ánh sáng chiến trường
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(10, 20, 10);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(20, 40, 20);
         scene.add(dirLight);
 
-        // Sân chiến & Mục tiêu
+        // Sân chiến & mục tiêu
         const floorGeo = new THREE.PlaneGeometry(100, 100);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2b3d2b, roughness: 0.8 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x334433, roughness: 0.9 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
         const targets = [];
-        for(let i = 0; i < 6; i++) {
-            const targetGeo = new THREE.BoxGeometry(2, 1.5, 4);
-            const targetMat = new THREE.MeshStandardMaterial({ color: 0x8b0000 });
+        for(let i = 0; i < 5; i++) {
+            const targetGeo = new THREE.BoxGeometry(2.2, 1.6, 4.5);
+            const targetMat = new THREE.MeshStandardMaterial({ color: 0x650000 });
             const target = new THREE.Mesh(targetGeo, targetMat);
-            target.position.set((Math.random() - 0.5) * 40, 0.75, -15 - Math.random() * 25);
+            target.position.set((Math.random() - 0.5) * 35, 0.8, -20 - Math.random() * 20);
             scene.add(target);
             targets.push(target);
         }
 
-        // 2. Cụm Tháp Pháo (Turret Group) chứa cả Nòng pháo VÀ Camera góc nhìn
+        // Cụm Tháp Pháo & Camera
         const turretGroup = new THREE.Group();
         turretGroup.position.set(0, 1.5, 0);
         scene.add(turretGroup);
 
-        // Gắn Camera trực tiếp vào Tháp pháo để khi tháp pháo xoay, camera xoay theo
-        camera.position.set(0, 0.4, 0.5); // Đặt vị trí kính ngắm bên trong tháp pháo
+        camera.position.set(0, 0.3, 0.4);
         turretGroup.add(camera);
 
-        // Mô hình nòng pháo đặc trưng dòng T (ngắn và có bọng hút khói ở giữa)
         const barrelGeo = new THREE.CylinderGeometry(0.12, 0.12, 3.5, 8);
         barrelGeo.rotateX(Math.PI / 2);
         const barrelMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
@@ -173,12 +271,11 @@
         barrel.position.set(0, 0, -1.75);
         turretGroup.add(barrel);
 
-        // Biến điều khiển góc xoay
         let turretRotationY = 0;
         let barrelRotationX = 0;
         let turnDirection = 0;
 
-        // 3. Xử lý nút bấm ảo
+        // Xử lý nút bấm
         const leftBtn = document.getElementById('left-btn');
         const rightBtn = document.getElementById('right-btn');
         const fireBtn = document.getElementById('fire-btn');
@@ -193,70 +290,55 @@
         rightBtn.addEventListener('mousedown', () => { turnDirection = -1; });
         rightBtn.addEventListener('mouseup', () => { turnDirection = 0; });
 
-        // Cơ chế bắn đạn
         const bullets = [];
         function shootBullet() {
             const bulletGeo = new THREE.SphereGeometry(0.18, 8, 8);
-            const bulletMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+            const bulletMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
             const bullet = new THREE.Mesh(bulletGeo, bulletMat);
             
-            // Lấy vị trí thế giới của đầu nòng pháo để phóng đạn chuẩn xác
-            const worldPosition = new THREE.Vector3();
-            barrel.getWorldPosition(worldPosition);
-            bullet.position.copy(worldPosition);
+            const worldPos = new THREE.Vector3();
+            barrel.getWorldPosition(worldPos);
+            bullet.position.copy(worldPos);
             
             const velocity = new THREE.Vector3(0, 0, -1);
             velocity.applyEuler(turretGroup.rotation);
-            // Cộng thêm độ chúc nòng theo chiều dọc
-            velocity.y -= barrelRotationX; 
-            velocity.normalize().multiplyScalar(1.2);
+            velocity.y -= barrelRotationX;
+            velocity.normalize().multiplyScalar(1.5);
 
             scene.add(bullet);
-            bullets.push({ mesh: bullet, velocity: velocity, life: 100 });
+            bullets.push({ mesh: bullet, velocity: velocity, life: 120 });
         }
 
         fireBtn.addEventListener('click', shootBullet);
         fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); shootBullet(); });
 
-        // Cảm ứng vuốt màn hình điều khiển tháp pháo và góc nâng/hạ nòng
+        // Cảm ứng vuốt
         let isTouching = false;
-        let prevTouchX = 0;
-        let prevTouchY = 0;
+        let prevX = 0, prevY = 0;
 
         const touchArea = document.getElementById('touch-area');
         touchArea.addEventListener('touchstart', (e) => {
             isTouching = true;
-            prevTouchX = e.touches[0].clientX;
-            prevTouchY = e.touches[0].clientY;
+            prevX = e.touches[0].clientX;
+            prevY = e.touches[0].clientY;
         });
 
         touchArea.addEventListener('touchmove', (e) => {
             if (!isTouching) return;
-            const deltaX = e.touches[0].clientX - prevTouchX;
-            const deltaY = e.touches[0].clientY - prevTouchY;
+            const dx = e.touches[0].clientX - prevX;
+            const dy = e.touches[0].clientY - prevY;
 
-            turretRotationY -= deltaX * 0.005;
-            barrelRotationX -= deltaY * 0.005;
+            turretRotationY -= dx * 0.005;
+            barrelRotationX -= dy * 0.005;
+            barrelRotationX = Math.max(-0.08, Math.min(0.2, barrelRotationX));
 
-            // ĐẶC TRƯNG T-SERIES: Góc hạ nòng rất thấp (giới hạn ngước lên nhiều nhưng chúc xuống cực ít)
-            barrelRotationX = Math.max(-0.08, Math.min(0.25, barrelRotationX));
-
-            prevTouchX = e.touches[0].clientX;
-            prevTouchY = e.touches[0].clientY;
+            prevX = e.touches[0].clientX;
+            prevY = e.touches[0].clientY;
         });
 
         touchArea.addEventListener('touchend', () => { isTouching = false; });
 
-        // Hỗ trợ chuột máy tính test nhanh
-        window.addEventListener('mousemove', (event) => {
-            if(event.buttons === 1) {
-                turretRotationY -= event.movementX * 0.005;
-                barrelRotationX -= event.movementY * 0.005;
-                barrelRotationX = Math.max(-0.08, Math.min(0.25, barrelRotationX));
-            }
-        });
-
-        // 4. Game Loop
+        // Game Loop
         function animate() {
             requestAnimationFrame(animate);
 
@@ -264,11 +346,10 @@
                 turretRotationY += turnDirection * 0.03;
             }
 
-            // Áp dụng góc xoay cho tháp pháo (camera bên trong sẽ tự động xoay theo)
             turretGroup.rotation.y = turretRotationY;
             barrel.rotation.x = barrelRotationX;
 
-            // Cập nhật đạn và va chạm
+            // Cập nhật đạn & va chạm
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const b = bullets[i];
                 b.mesh.position.add(b.velocity);
@@ -277,7 +358,7 @@
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
                     if (b.mesh.position.distanceTo(t.position) < 2) {
-                        t.material.color.set(0x00ff00);
+                        t.material.color.set(0x00ff00); // Trúng đích đổi màu báo hiệu
                         scene.remove(b.mesh);
                         bullets.splice(i, 1);
                         break;
