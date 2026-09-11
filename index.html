@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tank Playtest - Mobile Gunner Role</title>
+    <title>Tank Playtest - T-Series Gunner Role</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             background-color: #111;
             font-family: monospace;
-            touch-action: none; /* Ngăn trình duyệt tự động zoom/cuộn trên mobile */
+            touch-action: none;
         }
-        /* Giao diện tâm ngắm pháo thủ */
+        /* Tâm ngắm pháo thủ phong cách kính ngắm liên xô */
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             transform: translate(-50%, -50%);
-            border: 2px dashed rgba(0, 255, 0, 0.6);
+            border: 2px solid rgba(255, 165, 0, 0.7);
             border-radius: 50%;
             pointer-events: none;
             display: flex;
@@ -28,28 +28,36 @@
             justify-content: center;
             z-index: 10;
         }
+        #crosshair::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background-color: rgba(255, 165, 0, 0.5);
+        }
         #crosshair::after {
             content: '';
-            width: 6px;
-            height: 6px;
-            background-color: #00ff00;
-            border-radius: 50%;
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background-color: rgba(255, 165, 0, 0.5);
         }
-        /* Bảng thông tin HUD */
+        /* Bảng HUD thông tin kiểu T-Series */
         #hud {
             position: absolute;
             top: 15px;
             left: 15px;
-            color: #00ff00;
-            background: rgba(0, 0, 0, 0.7);
+            color: #ffa500;
+            background: rgba(0, 0, 0, 0.8);
             padding: 8px 12px;
-            border: 1px solid #00ff00;
+            border: 1px solid #ffa500;
             border-radius: 4px;
             pointer-events: none;
             z-index: 10;
-            font-size: 12px;
+            font-size: 11px;
+            line-height: 1.4;
         }
-        /* Giao diện các nút bấm ảo trên Mobile (Phong cách Cursed Tank Simulator) */
+        /* Các nút bấm ảo mobile */
         .mobile-controls {
             position: absolute;
             bottom: 20px;
@@ -62,10 +70,10 @@
             width: 75px;
             height: 75px;
             background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00ff00;
+            border: 2px solid #ffa500;
             border-radius: 50%;
-            color: #00ff00;
-            font-size: 14px;
+            color: #ffa500;
+            font-size: 13px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -73,11 +81,10 @@
             text-align: center;
             user-select: none;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             backdrop-filter: blur(4px);
         }
         .control-btn:active {
-            background: rgba(0, 255, 0, 0.3);
+            background: rgba(255, 165, 0, 0.3);
             transform: scale(0.95);
         }
         #fire-btn {
@@ -85,10 +92,6 @@
             border-color: #ff4444;
             color: #ff4444;
         }
-        #fire-btn:active {
-            background: rgba(255, 0, 0, 0.4);
-        }
-        /* Khu vực cảm ứng vuốt màn hình để xoay tháp pháo */
         #touch-area {
             position: absolute;
             top: 0;
@@ -103,81 +106,83 @@
 
     <div id="crosshair"></div>
     <div id="hud">
+        DÒNG TĂNG: T-SERIES (Autoloader)<br>
         VAI TRÒ: PHÁO THỦ (GUNNER)<br>
-        TRẠNG THÁI: Sẵn sàng chiến đấu<br>
-        ĐIỀU KHIỂN: Vuốt màn hình để xoay tháp | Dùng nút bên phải để bắn/hướng
+        ĐẶC TÍNH: Góc hạ nòng thấp (Hạn chế địa hình dốc)
     </div>
 
     <div id="touch-area"></div>
 
-    <!-- Cụm nút bấm ảo phong cách game mobile -->
     <div class="mobile-controls">
-        <div class="control-btn" id="left-btn">QUAY<br>TRÁI</div>
-        <div class="control-btn" id="right-btn">QUAY<br>PHẢI</div>
+        <div class="control-btn" id="left-btn">XOAY<br>TRÁI</div>
+        <div class="control-btn" id="right-btn">XOAY<br>PHẢI</div>
         <div class="control-btn" id="fire-btn">BẮN!<br>(FIRE)</div>
     </div>
 
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
-        // 1. Khởi tạo Scene, Camera & Renderer
+        // 1. Khởi tạo Scene & Renderer
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1a1a1a);
+        scene.background = new THREE.Color(0x151515);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 2, 5);
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
         // Ánh sáng chiến trường
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
         dirLight.position.set(10, 20, 10);
         scene.add(dirLight);
 
-        // Sân chơi & các mục tiêu low-poly
+        // Sân chiến & Mục tiêu
         const floorGeo = new THREE.PlaneGeometry(100, 100);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x3b4d3b, roughness: 0.8 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2b3d2b, roughness: 0.8 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
         const targets = [];
-        for(let i = 0; i < 5; i++) {
+        for(let i = 0; i < 6; i++) {
             const targetGeo = new THREE.BoxGeometry(2, 1.5, 4);
             const targetMat = new THREE.MeshStandardMaterial({ color: 0x8b0000 });
             const target = new THREE.Mesh(targetGeo, targetMat);
-            target.position.set((Math.random() - 0.5) * 30, 0.75, -20 - Math.random() * 20);
+            target.position.set((Math.random() - 0.5) * 40, 0.75, -15 - Math.random() * 25);
             scene.add(target);
             targets.push(target);
         }
 
-        // Mô hình nòng pháo
+        // 2. Cụm Tháp Pháo (Turret Group) chứa cả Nòng pháo VÀ Camera góc nhìn
         const turretGroup = new THREE.Group();
+        turretGroup.position.set(0, 1.5, 0);
         scene.add(turretGroup);
 
-        const barrelGeo = new THREE.CylinderGeometry(0.15, 0.15, 4, 8);
+        // Gắn Camera trực tiếp vào Tháp pháo để khi tháp pháo xoay, camera xoay theo
+        camera.position.set(0, 0.4, 0.5); // Đặt vị trí kính ngắm bên trong tháp pháo
+        turretGroup.add(camera);
+
+        // Mô hình nòng pháo đặc trưng dòng T (ngắn và có bọng hút khói ở giữa)
+        const barrelGeo = new THREE.CylinderGeometry(0.12, 0.12, 3.5, 8);
         barrelGeo.rotateX(Math.PI / 2);
-        const barrelMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+        const barrelMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
         const barrel = new THREE.Mesh(barrelGeo, barrelMat);
-        barrel.position.set(0, 0, -2);
+        barrel.position.set(0, 0, -1.75);
         turretGroup.add(barrel);
-        turretGroup.position.set(0, 1.5, 3);
 
         // Biến điều khiển góc xoay
-        let targetRotationY = 0;
-        let targetRotationX = 0;
-        let turnDirection = 0; // -1: trái, 1: phải, 0: đứng yên
+        let turretRotationY = 0;
+        let barrelRotationX = 0;
+        let turnDirection = 0;
 
-        // 2. Xử lý logic nút bấm ảo trên màn hình điện thoại
+        // 3. Xử lý nút bấm ảo
         const leftBtn = document.getElementById('left-btn');
         const rightBtn = document.getElementById('right-btn');
         const fireBtn = document.getElementById('fire-btn');
 
-        // Giữ nút trái/phải để xoay tháp pháo liên tục
         leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); turnDirection = 1; });
         leftBtn.addEventListener('touchend', () => { turnDirection = 0; });
         leftBtn.addEventListener('mousedown', () => { turnDirection = 1; });
@@ -188,16 +193,23 @@
         rightBtn.addEventListener('mousedown', () => { turnDirection = -1; });
         rightBtn.addEventListener('mouseup', () => { turnDirection = 0; });
 
-        // 3. Cơ chế bắn đạn
+        // Cơ chế bắn đạn
+        const bullets = [];
         function shootBullet() {
-            const bulletGeo = new THREE.SphereGeometry(0.2, 8, 8);
-            const bulletMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const bulletGeo = new THREE.SphereGeometry(0.18, 8, 8);
+            const bulletMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
             const bullet = new THREE.Mesh(bulletGeo, bulletMat);
-            bullet.position.copy(turretGroup.position);
+            
+            // Lấy vị trí thế giới của đầu nòng pháo để phóng đạn chuẩn xác
+            const worldPosition = new THREE.Vector3();
+            barrel.getWorldPosition(worldPosition);
+            bullet.position.copy(worldPosition);
             
             const velocity = new THREE.Vector3(0, 0, -1);
             velocity.applyEuler(turretGroup.rotation);
-            velocity.multiplyScalar(0.8);
+            // Cộng thêm độ chúc nòng theo chiều dọc
+            velocity.y -= barrelRotationX; 
+            velocity.normalize().multiplyScalar(1.2);
 
             scene.add(bullet);
             bullets.push({ mesh: bullet, velocity: velocity, life: 100 });
@@ -206,7 +218,7 @@
         fireBtn.addEventListener('click', shootBullet);
         fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); shootBullet(); });
 
-        // Hỗ trợ kéo vuốt cảm ứng trên màn hình để thay đổi góc nhìn
+        // Cảm ứng vuốt màn hình điều khiển tháp pháo và góc nâng/hạ nòng
         let isTouching = false;
         let prevTouchX = 0;
         let prevTouchY = 0;
@@ -223,9 +235,11 @@
             const deltaX = e.touches[0].clientX - prevTouchX;
             const deltaY = e.touches[0].clientY - prevTouchY;
 
-            targetRotationY -= deltaX * 0.005;
-            targetRotationX -= deltaY * 0.005;
-            targetRotationX = Math.max(-0.2, Math.min(0.5, targetRotationX));
+            turretRotationY -= deltaX * 0.005;
+            barrelRotationX -= deltaY * 0.005;
+
+            // ĐẶC TRƯNG T-SERIES: Góc hạ nòng rất thấp (giới hạn ngước lên nhiều nhưng chúc xuống cực ít)
+            barrelRotationX = Math.max(-0.08, Math.min(0.25, barrelRotationX));
 
             prevTouchX = e.touches[0].clientX;
             prevTouchY = e.touches[0].clientY;
@@ -233,36 +247,28 @@
 
         touchArea.addEventListener('touchend', () => { isTouching = false; });
 
-        // Hỗ trợ chuột cho máy tính (phòng khi test trên PC)
+        // Hỗ trợ chuột máy tính test nhanh
         window.addEventListener('mousemove', (event) => {
-            if(event.buttons === 1) { // Click giữ chuột trái để xoay nhìn
-                targetRotationY -= event.movementX * 0.005;
-                targetRotationX -= event.movementY * 0.005;
-                targetRotationX = Math.max(-0.2, Math.min(0.5, targetRotationX));
-            }
-        });
-        window.addEventListener('click', (e) => {
-            if(e.target.tagName !== 'DIV' || e.target.id === 'touch-area') {
-                // Click ngoài vùng nút bấm thì bắn
-                // shootBullet();
+            if(event.buttons === 1) {
+                turretRotationY -= event.movementX * 0.005;
+                barrelRotationX -= event.movementY * 0.005;
+                barrelRotationX = Math.max(-0.08, Math.min(0.25, barrelRotationX));
             }
         });
 
-        const bullets = [];
-
-        // 4. Game Loop cập nhật khung hình liên tục
+        // 4. Game Loop
         function animate() {
             requestAnimationFrame(animate);
 
-            // Xoay tháp pháo khi bấm nút ảo
             if (turnDirection !== 0) {
-                targetRotationY += turnDirection * 0.03;
+                turretRotationY += turnDirection * 0.03;
             }
 
-            turretGroup.rotation.y = targetRotationY;
-            barrel.rotation.x = targetRotationX;
+            // Áp dụng góc xoay cho tháp pháo (camera bên trong sẽ tự động xoay theo)
+            turretGroup.rotation.y = turretRotationY;
+            barrel.rotation.x = barrelRotationX;
 
-            // Cập nhật vị trí đạn bay và kiểm tra va chạm mục tiêu
+            // Cập nhật đạn và va chạm
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const b = bullets[i];
                 b.mesh.position.add(b.velocity);
@@ -271,7 +277,7 @@
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
                     if (b.mesh.position.distanceTo(t.position) < 2) {
-                        t.material.color.set(0x00ff00); // Trúng đạn chuyển sang xanh
+                        t.material.color.set(0x00ff00);
                         scene.remove(b.mesh);
                         bullets.splice(i, 1);
                         break;
@@ -289,7 +295,6 @@
 
         animate();
 
-        // Tự động điều chỉnh kích thước khi xoay màn hình điện thoại
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
