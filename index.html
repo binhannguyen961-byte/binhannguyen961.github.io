@@ -3,371 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Su-30MK2 Flanker vs F-16 - Third Person Dogfight</title>
+    <title>The Lost Front x Manhunt - Mobile Supported</title>
     <style>
         body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #000;
-            font-family: monospace;
-            touch-action: none;
-            user-select: none;
-            color: #00ff66;
+            margin: 0; overflow: hidden; background-color: #000;
+            font-family: 'Courier New', Courier, monospace; user-select: none;
+            -webkit-user-select: none; touch-action: none;
         }
 
-        /* --- JET HUD DISPLAY --- */
-        #hud-top {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 15, 0, 0.75);
-            padding: 8px 12px;
-            border: 1px solid #00ff66;
-            border-radius: 4px;
-            font-size: 11px;
-            line-height: 1.5;
-            z-index: 20;
-            pointer-events: none;
+        /* UI chung */
+        #crosshair {
+            position: absolute; top: 50%; left: 50%; width: 10px; height: 10px;
+            background: white; border-radius: 50%; transform: translate(-50%, -50%);
+            mix-blend-mode: difference; pointer-events: none; z-index: 50;
+        }
+        #hud {
+            position: absolute; top: 10px; left: 20px; color: #fff; font-size: 18px;
+            font-weight: bold; text-shadow: 2px 2px 0 #000; z-index: 50; pointer-events: none;
+        }
+        #interaction-prompt {
+            position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 0 #000;
+            display: none; z-index: 50; text-align: center; pointer-events: none;
         }
 
-        #radar-box {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 100px;
-            height: 100px;
-            border: 1px solid #00ff66;
-            background: rgba(0, 20, 0, 0.6);
-            border-radius: 50%;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
+        /* Màn hình khởi động PC */
+        #blocker {
+            position: absolute; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #fff; z-index: 100; text-align: center;
         }
 
-        /* Throttle & Controls */
-        #throttle-container {
-            position: absolute;
-            left: 15px;
-            bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            z-index: 20;
+        /* Hiệu ứng Manhunt */
+        #vhs-filter {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 4px);
+            pointer-events: none; opacity: 0; z-index: 80; transition: opacity 0.1s;
         }
-        .throt-btn {
-            width: 50px;
-            height: 50px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #00ff66;
-            color: #00ff66;
-            font-weight: bold;
-            font-size: 14px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        #blood-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 150px 50px rgba(139, 0, 0, 0.9);
+            pointer-events: none; opacity: 0; z-index: 90; transition: opacity 0.5s ease-out;
         }
-        .throt-btn:active { background: rgba(0, 255, 102, 0.3); }
+        @keyframes cameraShake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(10px, 10px) rotate(2deg); }
+            50% { transform: translate(-10px, -10px) rotate(-2deg); }
+            75% { transform: translate(-10px, 10px) rotate(2deg); }
+            100% { transform: translate(10px, -10px) rotate(-2deg); }
+        }
+        .shake-active { animation: cameraShake 0.1s infinite; }
 
-        #weapon-panel {
-            position: absolute;
-            bottom: 25px;
-            right: 15px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            z-index: 20;
+        /* UI MOBILE CONTROLS */
+        #mobile-ui {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 40;
         }
-        .weapon-btn {
-            width: 55px;
-            height: 55px;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid #888;
-            color: #aaa;
-            font-size: 10px;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        /* Vùng Look (Bên phải) */
+        #look-zone {
+            position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+        }
+        /* Joystick Di chuyển (Bên trái) */
+        #joystick-zone {
+            position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px;
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
+        }
+        #joystick-knob {
+            position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
+            background: rgba(255,255,255,0.5); border-radius: 50%;
+        }
+        /* Nút hành động */
+        .btn {
+            position: absolute; width: 60px; height: 60px; background: rgba(139, 0, 0, 0.6);
+            border: 2px solid #8b0000; border-radius: 50%; color: white; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
             text-align: center;
         }
-        .weapon-btn.selected {
-            border-color: #00ff66;
-            color: #00ff66;
-            background: rgba(0, 255, 102, 0.2);
-        }
-        #fire-btn {
-            width: 70px;
-            height: 70px;
-            background: rgba(180, 0, 0, 0.85);
-            border: 2px solid #ff3333;
-            color: #fff;
-            font-weight: bold;
-            font-size: 13px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #fire-btn:active { transform: scale(0.95); }
-
-        #touch-area {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%; z-index: 5;
-        }
+        .btn:active { background: rgba(255, 0, 0, 0.8); }
+        #btn-attack { bottom: 30px; right: 30px; width: 70px; height: 70px; font-size: 14px;}
+        #btn-execute { bottom: 120px; right: 30px; background: rgba(0, 0, 0, 0.8); border-color: #fff;}
+        #btn-interact { bottom: 30px; right: 120px; background: rgba(50, 50, 50, 0.8); border-color: #aaa;}
+        #btn-jump { bottom: 120px; right: 120px; background: rgba(50, 50, 50, 0.8); border-color: #aaa;}
     </style>
 </head>
 <body>
 
-    <!-- HUD Thông số Su-30MK2 -->
-    <div id="hud-top">
-        AIRCRAFT: Su-30MK2 FLANKER-G+ (3RD PERSON)<br>
-        SPEED: <span id="spd-txt">0</span> km/h (M <span id="mach-txt">0.0</span>)<br>
-        ALTITUDE: <span id="alt-txt">0</span> m | THROTTLE: <span id="throt-txt">50%</span><br>
-        TARGET LOCK: <span id="target-txt" style="color:#ff4444;">SEARCHING...</span>
+    <div id="blocker">
+        <h1 style="color: #8b0000; text-shadow: 2px 2px 0 #000;">GMOD SURVIVAL</h1>
+        <p>CHẠM VÀO MÀN HÌNH ĐỂ CHƠI</p>
+        <p>PC: Dùng WASD, Chuột, E (Kết liễu), F (Nhặt đồ)</p>
+        <p>Mobile: Dùng Joystick giả lập trên màn hình</p>
     </div>
 
-    <!-- Khung Radar thu nhỏ -->
-    <div id="radar-box">
-        <div style="font-size: 8px; position: absolute; top: 4px; color: #00ff66;">RADAR 20KM</div>
+    <div id="crosshair"></div>
+    <div id="vhs-filter"></div>
+    <div id="blood-screen"></div>
+    <div id="hud">WEAPON: HANDS<br>HP: 100</div>
+    <div id="interaction-prompt">...</div>
+
+    <!-- UI Dành riêng cho Mobile -->
+    <div id="mobile-ui">
+        <div id="look-zone"></div>
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
+        <div class="btn" id="btn-attack">ATTACK</div>
+        <div class="btn" id="btn-execute">EXECUTE</div>
+        <div class="btn" id="btn-interact">PICKUP</div>
+        <div class="btn" id="btn-jump">JUMP</div>
     </div>
 
-    <!-- Cần ga Throttle -->
-    <div id="throttle-container">
-        <div class="throt-btn" id="throt-up">▲</div>
-        <div style="font-size:8px; color:#00ff66;">THROTTLE</div>
-        <div class="throt-btn" id="throt-dn">▼</div>
-    </div>
-
-    <!-- Bảng vũ khí -->
-    <div id="weapon-panel">
-        <div class="weapon-btn selected" id="wpn-r73">R-73<br>AAM</div>
-        <div class="weapon-btn" id="wpn-gun">GSh-30-1<br>30mm</div>
-        <div id="fire-btn">FOX 2</div>
-    </div>
-
-    <div id="touch-area"></div>
+    <div id="game-container"></div>
 
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
+        // --- CẤU HÌNH THREE.JS ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x4a75a0);
-        scene.fog = new THREE.FogExp2(0x4a75a0, 0.0004);
+        scene.background = new THREE.Color(0x222222);
+        scene.fog = new THREE.FogExp2(0x222222, 0.05);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        // Player body (để tính toán va chạm và xoay)
+        const playerObj = new THREE.Object3D();
+        playerObj.position.set(0, 1.5, 0);
+        scene.add(playerObj);
+        playerObj.add(camera);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('game-container').appendChild(renderer.domElement);
 
-        // Ánh sáng
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0x404040, 2);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-        dirLight.position.set(100, 300, 100);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        dirLight.position.set(-10, 20, 10);
+        dirLight.castShadow = true;
         scene.add(dirLight);
 
-        // Mặt đất
-        const floorGeo = new THREE.PlaneGeometry(10000, 10000, 16, 16);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x223311, roughness: 0.8 });
+        // --- MAP VÀ MÔI TRƯỜNG ---
+        const floorGeo = new THREE.PlaneGeometry(100, 100);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
         scene.add(floor);
 
-        // Máy bay Su-30MK2 (Người chơi)
-        const playerJet = new THREE.Group();
-        playerJet.position.set(0, 1000, 0);
-        scene.add(playerJet);
-
-        // Dựng mô hình 3D Su-30MK2 cơ bản
-        const jetBodyGeo = new THREE.ConeGeometry(1.2, 10, 8);
-        jetBodyGeo.rotateX(Math.PI / 2);
-        const jetMat = new THREE.MeshStandardMaterial({ color: 0x2b4c6f }); // Màu xanh camouflage Su-30
-        const jetBody = new THREE.Mesh(jetBodyGeo, jetMat);
-        playerJet.add(jetBody);
-
-        // Cánh Su-30MK2
-        const wingGeo = new THREE.BoxGeometry(9, 0.1, 4);
-        const wing = new THREE.Mesh(wingGeo, jetMat);
-        wing.position.set(0, 0, 1);
-        playerJet.add(wing);
-
-        // Đuôi đứng kép (Twin Tails) đặc trưng dòng Flanker
-        const tailGeo = new THREE.BoxGeometry(0.1, 2, 1.5);
-        const tail1 = new THREE.Mesh(tailGeo, jetMat);
-        const tail2 = new THREE.Mesh(tailGeo, jetMat);
-        tail1.position.set(-1, 1, 3.5);
-        tail2.position.set(1, 1, 3.5);
-        playerJet.add(tail1);
-        playerJet.add(tail2);
-
-        // --- GÓC NHÌN THỨ 3 (THIRD PERSON CAMERA) ---
-        // Đặt camera phía sau (Z = 18) và phía trên (Y = 5) máy bay
-        camera.position.set(0, 5, 18);
-        playerJet.add(camera);
-        camera.lookAt(playerJet.position);
-
-        // Tâm ngắm 3D phía trước mũi máy bay
-        const reticleGeo = new THREE.RingGeometry(0.8, 1, 16);
-        const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00ff66, side: THREE.DoubleSide });
-        const reticle = new THREE.Mesh(reticleGeo, reticleMat);
-        reticle.position.set(0, 0, -40);
-        playerJet.add(reticle);
-
-        // Tạo Bot AI F-16 Falcon
-        const botJets = [];
-        function createF16(x, y, z) {
-            const f16Group = new THREE.Group();
-            f16Group.position.set(x, y, z);
-
-            const bodyGeo = new THREE.ConeGeometry(1.5, 8, 5);
-            bodyGeo.rotateX(Math.PI / 2);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x778899 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            f16Group.add(body);
-
-            const wingGeo = new THREE.BoxGeometry(7, 0.1, 3);
-            const wing = new THREE.Mesh(wingGeo, bodyMat);
-            wing.position.set(0, 0, 1);
-            f16Group.add(wing);
-
-            scene.add(f16Group);
-            botJets.push({ mesh: f16Group, hp: 100, speed: 2.2 });
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x334433 });
+        for(let i=0; i<30; i++) {
+            const wGeo = new THREE.BoxGeometry(2 + Math.random()*5, 2 + Math.random()*3, 2 + Math.random()*5);
+            const w = new THREE.Mesh(wGeo, wallMat);
+            w.position.set((Math.random()-0.5)*60, 1.5, (Math.random()-0.5)*60);
+            w.castShadow = true; w.receiveShadow = true;
+            scene.add(w);
         }
 
-        createF16(100, 1000, -800);
-        createF16(-300, 1200, -1200);
-        createF16(400, 900, -1500);
+        // --- HỆ THỐNG VŨ KHÍ ---
+        const WEAPONS = {
+            HANDS: { id: 'HANDS', range: 1.5, damage: 10, type: 'melee' },
+            BAT: { id: 'BAT', range: 2.5, damage: 30, type: 'melee' },
+            SHOVEL: { id: 'SHOVEL', range: 3.0, damage: 45, type: 'melee' },
+            RIFLE: { id: 'RIFLE', range: 50, damage: 40, type: 'shoot' }
+        };
+        let currentWeapon = WEAPONS.HANDS;
 
-        // Thông số bay
-        let throttle = 50;
-        let currentSpeed = 2.5;
-        let pitchRate = 0, rollRate = 0;
+        // Mô hình vũ khí hiển thị trên tay
+        const weaponHandGroup = new THREE.Group();
+        weaponHandGroup.position.set(0.3, -0.3, -0.5);
+        camera.add(weaponHandGroup);
+        
+        let currentHandMesh = null;
 
-        const throtUp = document.getElementById('throt-up');
-        const throtDn = document.getElementById('throt-dn');
-        throtUp.onclick = () => { throttle = Math.min(100, throttle + 10); };
-        throtDn.onclick = () => { throttle = Math.max(20, throttle - 10); };
-
-        let isTouching = false;
-        let prevX = 0, prevY = 0;
-
-        const touchArea = document.getElementById('touch-area');
-        touchArea.addEventListener('touchstart', (e) => {
-            isTouching = true;
-            prevX = e.touches[0].clientX;
-            prevY = e.touches[0].clientY;
-        });
-
-        touchArea.addEventListener('touchmove', (e) => {
-            if (!isTouching) return;
-            const dx = e.touches[0].clientX - prevX;
-            const dy = e.touches[0].clientY - prevY;
-
-            rollRate = -dx * 0.0008;
-            pitchRate = -dy * 0.0008;
-
-            prevX = e.touches[0].clientX;
-            prevY = e.touches[0].clientY;
-        });
-
-        touchArea.addEventListener('touchend', () => { 
-            isTouching = false; 
-            pitchRate = 0; rollRate = 0;
-        });
-
-        // Tên lửa đuổi
-        const missiles = [];
-        const fireBtn = document.getElementById('fire-btn');
-
-        function launchR73() {
-            const mGeo = new THREE.CylinderGeometry(0.1, 0.1, 2, 8);
-            mGeo.rotateX(Math.PI / 2);
-            const mMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
-            const missile = new THREE.Mesh(mGeo, mMat);
-
-            missile.position.copy(playerJet.position);
-            missile.quaternion.copy(playerJet.quaternion);
-
-            scene.add(missile);
-            missiles.push({ mesh: missile, life: 300, speed: 5.0 });
+        function updateHandWeapon() {
+            if (currentHandMesh) {
+                weaponHandGroup.remove(currentHandMesh);
+            }
+            if (currentWeapon.id === 'BAT') {
+                const geo = new THREE.CylinderGeometry(0.02, 0.04, 0.8, 8);
+                const mat = new THREE.MeshStandardMaterial({color: 0x8b4513});
+                currentHandMesh = new THREE.Mesh(geo, mat);
+                currentHandMesh.rotation.x = Math.PI / 2;
+            } else if (currentWeapon.id === 'SHOVEL') {
+                currentHandMesh = new THREE.Group();
+                const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8), new THREE.MeshStandardMaterial({color: 0x5c4033}));
+                handle.rotation.x = Math.PI/2;
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.05), new THREE.MeshStandardMaterial({color: 0x777777}));
+                head.position.set(0, 0, -0.4);
+                currentHandMesh.add(handle); currentHandMesh.add(head);
+            } else if (currentWeapon.id === 'RIFLE') {
+                const geo = new THREE.BoxGeometry(0.05, 0.1, 0.8);
+                const mat = new THREE.MeshStandardMaterial({color: 0x111111});
+                currentHandMesh = new THREE.Mesh(geo, mat);
+            }
+            if(currentHandMesh) weaponHandGroup.add(currentHandMesh);
+            document.getElementById('hud').innerHTML = `WEAPON: ${currentWeapon.id}<br>HP: 100`;
         }
 
-        fireBtn.addEventListener('click', launchR73);
-        fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); launchR73(); });
+        // Vật phẩm rơi trên map
+        const pickableItems = [];
+        function spawnItem(type, x, z) {
+            let mesh;
+            if (type === 'BAT') {
+                mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 1.5, 8), new THREE.MeshStandardMaterial({color: 0x8b4513}));
+            } else if (type === 'SHOVEL') {
+                mesh = new THREE.Group();
+                const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.5), new THREE.MeshStandardMaterial({color: 0x5c4033}));
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.1), new THREE.MeshStandardMaterial({color: 0x777777}));
+                head.position.y = 0.8;
+                mesh.add(handle); mesh.add(head);
+            } else if (type === 'RIFLE') {
+                mesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 1.2), new THREE.MeshStandardMaterial({color: 0x111111}));
+            }
+            mesh.position.set(x, 0.1, z);
+            mesh.rotation.x = Math.PI / 2; // Nằm trên đất
+            scene.add(mesh);
+            pickableItems.push({ mesh: mesh, type: type });
+        }
+        
+        spawnItem('BAT', 5, -5);
+        spawnItem('SHOVEL', -5, -8);
+        spawnItem('RIFLE', 0, -15);
 
-        // Game Loop
+        // --- NPC (Kẻ địch) ---
+        const enemies = [];
+        const enemyMat = new THREE.MeshStandardMaterial({ color: 0x999999 });
+        function spawnEnemy(x, z) {
+            const group = new THREE.Group();
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), enemyMat);
+            head.position.y = 1.4;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.4), enemyMat);
+            body.position.y = 0.6;
+            group.add(head); group.add(body);
+            group.position.set(x, 0, z);
+            scene.add(group);
+            enemies.push({ group: group, hp: 100, isDead: false });
+        }
+        spawnEnemy(2, -10); spawnEnemy(-8, -12); spawnEnemy(10, -20);
+
+        // --- HỆ THỐNG MÁU (GORE) ---
+        const bloodParticles = [];
+        function spawnGore(pos, amount, explosive) {
+            for (let i = 0; i < amount; i++) {
+                const b = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshBasicMaterial({color: 0x8b0000}));
+                b.position.copy(pos);
+                const force = explosive ? 15 : 5;
+                b.velocity = new THREE.Vector3((Math.random()-0.5)*force, Math.random()*(explosive?10:3), (Math.random()-0.5)*force);
+                scene.add(b);
+                bloodParticles.push({ mesh: b, life: 100 });
+            }
+        }
+
+        // --- TƯƠNG TÁC (TẤN CÔNG / KẾT LIỄU / NHẶT) ---
+        const raycaster = new THREE.Raycaster();
+        let targetEnemy = null;
+        let targetItem = null;
+        let canExecute = false;
+
+        function performAttack() {
+            // Hiệu ứng vung tay/giật súng
+            weaponHandGroup.position.z += 0.2;
+            weaponHandGroup.rotation.x -= 0.2;
+            setTimeout(() => { weaponHandGroup.position.z -= 0.2; weaponHandGroup.rotation.x += 0.2; }, 150);
+
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            const intersects = raycaster.intersectObjects(enemies.map(e => e.group), true);
+            if (intersects.length > 0 && intersects[0].distance <= currentWeapon.range) {
+                const enemy = enemies.find(e => e.group === intersects[0].object.parent);
+                if (enemy && !enemy.isDead) {
+                    enemy.hp -= currentWeapon.damage;
+                    spawnGore(intersects[0].point, 15, false);
+                    if (enemy.hp <= 0) {
+                        enemy.isDead = true;
+                        enemy.group.rotation.x = -Math.PI / 2;
+                        enemy.group.position.y = 0.2;
+                    }
+                }
+            }
+        }
+
+        function performExecute() {
+            if (canExecute && targetEnemy && !targetEnemy.isDead) {
+                document.getElementById('game-container').classList.add('shake-active');
+                document.getElementById('vhs-filter').style.opacity = 1;
+                document.getElementById('blood-screen').style.opacity = 1;
+                
+                spawnGore(targetEnemy.group.position.clone().add(new THREE.Vector3(0,1,0)), 60, true);
+                targetEnemy.isDead = true; targetEnemy.group.visible = false;
+
+                setTimeout(() => {
+                    document.getElementById('game-container').classList.remove('shake-active');
+                    document.getElementById('vhs-filter').style.opacity = 0;
+                    document.getElementById('blood-screen').style.opacity = 0;
+                }, 800);
+            }
+        }
+
+        function performPickup() {
+            if (targetItem) {
+                currentWeapon = WEAPONS[targetItem.type];
+                updateHandWeapon();
+                scene.remove(targetItem.mesh);
+                pickableItems.splice(pickableItems.indexOf(targetItem), 1);
+                targetItem = null;
+            }
+        }
+
+        // --- ĐIỀU KHIỂN (PC & MOBILE) ---
+        let moveInput = new THREE.Vector2(0,0);
+        let lookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+        let isPointerLocked = false;
+        let isMobile = ('ontouchstart' in window);
+
+        const blocker = document.getElementById('blocker');
+        const mobileUI = document.getElementById('mobile-ui');
+
+        blocker.addEventListener('click', () => {
+            blocker.style.display = 'none';
+            if (isMobile) {
+                mobileUI.style.display = 'block';
+            } else {
+                document.body.requestPointerLock();
+            }
+        });
+
+        // PC MOUSE/KEYBOARD
+        document.addEventListener('pointerlockchange', () => { isPointerLocked = !!document.pointerLockElement; });
+        document.addEventListener('mousemove', (e) => {
+            if (isPointerLocked) {
+                lookEuler.setFromQuaternion(camera.quaternion);
+                lookEuler.y -= e.movementX * 0.002;
+                lookEuler.x -= e.movementY * 0.002;
+                lookEuler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, lookEuler.x));
+                camera.quaternion.setFromEuler(lookEuler);
+                playerObj.rotation.y = lookEuler.y; // Xoay thân player theo camera y
+            }
+        });
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.code] = true; });
+        document.addEventListener('keyup', (e) => { 
+            keys[e.code] = false; 
+            if(e.code === 'KeyE') performExecute();
+            if(e.code === 'KeyF') performPickup();
+        });
+        document.addEventListener('mousedown', (e) => { if (isPointerLocked && e.button === 0) performAttack(); });
+
+        // MOBILE TOUCH CONTROLS
+        // Look Zone
+        const lookZone = document.getElementById('look-zone');
+        let touchLookId = null, prevTouchX = 0, prevTouchY = 0;
+        lookZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const t = e.changedTouches[0];
+            touchLookId = t.identifier; prevTouchX = t.clientX; prevTouchY = t.clientY;
+        });
+        lookZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i=0; i<e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === touchLookId) {
+                    let dx = t.clientX - prevTouchX; let dy = t.clientY - prevTouchY;
+                    lookEuler.setFromQuaternion(camera.quaternion);
+                    lookEuler.y -= dx * 0.005; lookEuler.x -= dy * 0.005;
+                    lookEuler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, lookEuler.x));
+                    camera.quaternion.setFromEuler(lookEuler);
+                    playerObj.rotation.y = lookEuler.y;
+                    prevTouchX = t.clientX; prevTouchY = t.clientY;
+                }
+            }
+        });
+        lookZone.addEventListener('touchend', (e) => {
+            for (let i=0; i<e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === touchLookId) touchLookId = null;
+            }
+        });
+
+        // Joystick
+        const joyZone = document.getElementById('joystick-zone');
+        const joyKnob = document.getElementById('joystick-knob');
+        let joyTouchId = null;
+        let joyCenter = {x:0, y:0};
+
+        joyZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const t = e.changedTouches[0]; joyTouchId = t.identifier;
+            const rect = joyZone.getBoundingClientRect();
+            joyCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
+            updateJoystick(t.clientX, t.clientY);
+        });
+        joyZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i=0; i<e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joyTouchId) updateJoystick(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+            }
+        });
+        joyZone.addEventListener('touchend', (e) => {
+            for (let i=0; i<e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joyTouchId) {
+                    joyTouchId = null; moveInput.set(0,0);
+                    joyKnob.style.transform = `translate(0px, 0px)`;
+                }
+            }
+        });
+
+        function updateJoystick(tx, ty) {
+            let dx = tx - joyCenter.x; let dy = ty - joyCenter.y;
+            const distance = Math.min(60, Math.sqrt(dx*dx + dy*dy));
+            const angle = Math.atan2(dy, dx);
+            const kx = Math.cos(angle) * distance; const ky = Math.sin(angle) * distance;
+            joyKnob.style.transform = `translate(${kx}px, ${ky}px)`;
+            
+            // Map sang WASD (-1 đến 1)
+            moveInput.x = kx / 60; // Trái phải
+            moveInput.y = ky / 60; // Tiến lùi
+        }
+
+        // Mobile Buttons
+        document.getElementById('btn-attack').addEventListener('touchstart', (e) => { e.preventDefault(); performAttack(); });
+        document.getElementById('btn-execute').addEventListener('touchstart', (e) => { e.preventDefault(); performExecute(); });
+        document.getElementById('btn-interact').addEventListener('touchstart', (e) => { e.preventDefault(); performPickup(); });
+        document.getElementById('btn-jump').addEventListener('touchstart', (e) => { e.preventDefault(); keys['Space'] = true; setTimeout(()=>keys['Space']=false, 100); });
+
+        // --- LÕI GAME LOOP ---
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let prevTime = performance.now();
+
         function animate() {
             requestAnimationFrame(animate);
+            const time = performance.now();
+            const delta = Math.min((time - prevTime) / 1000, 0.1);
 
-            currentSpeed = THREE.MathUtils.lerp(currentSpeed, (throttle / 100) * 4.5, 0.02);
+            // Xử lý di chuyển
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
+            velocity.y -= 30.0 * delta; // Trọng lực
 
-            // Điều khiển bay
-            playerJet.rotateX(pitchRate);
-            playerJet.rotateZ(rollRate);
-            playerJet.translateZ(-currentSpeed);
+            let mRight = isMobile ? moveInput.x : (Number(keys['KeyD']||0) - Number(keys['KeyA']||0));
+            let mForward = isMobile ? moveInput.y : (Number(keys['KeyS']||0) - Number(keys['KeyW']||0));
 
-            if (playerJet.position.y < 10) playerJet.position.y = 10;
+            direction.set(mRight, 0, mForward).normalize();
+            
+            if (mForward !== 0) velocity.z -= direction.z * 40.0 * delta;
+            if (mRight !== 0) velocity.x -= direction.x * 40.0 * delta;
 
-            // AI F-16
-            let nearestBot = null;
-            let minDist = 9999;
+            if (keys['Space'] && playerObj.position.y <= 1.5) velocity.y = 12;
 
-            botJets.forEach(bot => {
-                bot.mesh.translateZ(-bot.speed);
-                bot.mesh.rotation.y += 0.005;
+            playerObj.translateX(velocity.x * delta);
+            playerObj.translateZ(velocity.z * delta);
+            playerObj.position.y += velocity.y * delta;
 
-                const dist = playerJet.position.distanceTo(bot.mesh.position);
-                if (dist < minDist) {
-                    minDist = dist;
-                    nearestBot = bot;
-                }
-            });
+            if (playerObj.position.y < 1.5) {
+                velocity.y = 0; playerObj.position.y = 1.5;
+            }
 
-            // Tên lửa R-73
-            for (let i = missiles.length - 1; i >= 0; i--) {
-                const m = missiles[i];
-                m.mesh.translateZ(-m.speed);
-                m.life--;
+            // Kiểm tra Kẻ địch gần để Execute
+            canExecute = false; targetEnemy = null;
+            let promptText = "";
 
-                if (nearestBot) {
-                    m.mesh.lookAt(nearestBot.mesh.position);
-                }
-
-                if (nearestBot && m.mesh.position.distanceTo(nearestBot.mesh.position) < 15) {
-                    scene.remove(nearestBot.mesh);
-                    botJets.splice(botJets.indexOf(nearestBot), 1);
-                    scene.remove(m.mesh);
-                    missiles.splice(i, 1);
+            for (let e of enemies) {
+                if (!e.isDead && playerObj.position.distanceTo(e.group.position) < 2.5) {
+                    canExecute = true; targetEnemy = e;
+                    promptText = "[E] HOẶC TAP EXECUTE ĐỂ KẾT LIỄU";
                     break;
-                }
-
-                if (m.life <= 0 && missiles[i]) {
-                    scene.remove(m.mesh);
-                    missiles.splice(i, 1);
                 }
             }
 
-            // HUD
-            const speedKmh = Math.round(currentSpeed * 220);
-            document.getElementById('spd-txt').innerText = speedKmh;
-            document.getElementById('mach-txt').innerText = (speedKmh / 1225).toFixed(2);
-            document.getElementById('alt-txt').innerText = Math.round(playerJet.position.y);
-            document.getElementById('throt-txt').innerText = throttle + "%";
+            // Kiểm tra Item để Pickup
+            targetItem = null;
+            if (!canExecute) {
+                for (let item of pickableItems) {
+                    if (playerObj.position.distanceTo(item.mesh.position) < 3.0) {
+                        targetItem = item;
+                        promptText = `[F] HOẶC TAP PICKUP ĐỂ NHẶT ${item.type}`;
+                        break;
+                    }
+                }
+            }
 
-            if (nearestBot && minDist < 2000) {
-                document.getElementById('target-txt').innerText = "LOCK F-16 (" + Math.round(minDist) + "m)";
-                document.getElementById('target-txt').style.color = "#00ff66";
+            const promptUI = document.getElementById('interaction-prompt');
+            if (promptText !== "") {
+                promptUI.style.display = 'block'; promptUI.innerText = promptText;
             } else {
-                document.getElementById('target-txt').innerText = "SEARCHING...";
-                document.getElementById('target-txt').style.color = "#ff4444";
+                promptUI.style.display = 'none';
+            }
+
+            // Cập nhật hạt máu
+            for (let i = bloodParticles.length - 1; i >= 0; i--) {
+                const p = bloodParticles[i];
+                p.velocity.y -= 15 * delta;
+                p.mesh.position.addScaledVector(p.velocity, delta);
+                if (p.mesh.position.y <= 0.05) {
+                    p.mesh.position.y = 0.05; p.velocity.set(0,0,0); p.mesh.scale.set(3, 0.1, 3);
+                }
+                p.life--;
+                if (p.life <= 0 && p.velocity.lengthSq() > 0.1) {
+                    scene.remove(p.mesh); bloodParticles.splice(i, 1);
+                }
             }
 
             renderer.render(scene, camera);
+            prevTime = time;
         }
 
         animate();
