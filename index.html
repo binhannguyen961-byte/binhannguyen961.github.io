@@ -87,11 +87,12 @@
             left: 10px;
             color: #fff;
             font-size: 11px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 6px 12px;
             border-left: 3px solid #00ff00;
             z-index: 20;
             pointer-events: none;
+            border-radius: 2px;
         }
 
         #xray-box {
@@ -126,7 +127,7 @@
         #mod-ammo { top: 20px; left: 25px; width: 20px; height: 35px; background: #ffaa00; }
         #mod-gunner { top: 35px; right: 15px; width: 12px; height: 12px; border-radius: 50%; }
 
-        /* --- GIAO DIỆN NÚT BẤM ĐIỀU KHIỂN MOBILE --- # */
+        /* --- GIAO DIỆN NÚT BẤM ĐIỀU KHIỂN MOBILE --- */
         .mobile-controls {
             position: absolute;
             bottom: 20px;
@@ -162,7 +163,6 @@
             height: 80px;
         }
 
-        /* Khu vực cảm ứng vuốt màn hình */
         #touch-area {
             position: absolute;
             top: 0;
@@ -175,10 +175,10 @@
 </head>
 <body>
 
-    <!-- HUD Thông số & Cự ly -->
+    <!-- HUD Thông số & Laser Rangefinder -->
     <div id="hud-top">
         ĐẠN: <span id="ammo-type" style="color:#ffaa00;">L31A7 HESH</span> | NẠP: <span style="color:#00ff00;">SẴN SÀNG</span><br>
-        CỰ LY MỤC TIÊU: <span id="range-text">334m</span>
+        LASER RANGE: <span id="range-text" style="color:#00ff00; font-weight:bold;">--- m</span>
     </div>
 
     <!-- Khung X-Ray Mô-đun xe (Góc trái) -->
@@ -191,12 +191,11 @@
         </div>
     </div>
 
-    <!-- Ống ngắm quang học mô phỏng War Thunder -->
+    <!-- Ống ngắm quang học -->
     <div id="optic-overlay">
         <div class="crosshair-v"></div>
         <div class="crosshair-h"></div>
         
-        <!-- Thước ngắm dọc chia độ -->
         <div class="reticle-ladder">
             <div class="tick" data-val="2"></div>
             <div class="tick" data-val="4"></div>
@@ -206,7 +205,6 @@
             <div class="tick" data-val="12"></div>
         </div>
 
-        <!-- Thước ngang -->
         <div class="reticle-horizontal">
             <span>-20</span><span>-10</span><span>0</span><span>+10</span><span>+20</span>
         </div>
@@ -232,53 +230,83 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Ánh sáng chiến trường
+        // Ánh sáng
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
         dirLight.position.set(20, 40, 20);
         scene.add(dirLight);
 
-        // Sân chiến & mục tiêu
-        const floorGeo = new THREE.PlaneGeometry(100, 100);
+        // Sân chiến
+        const floorGeo = new THREE.PlaneGeometry(200, 200);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x334433, roughness: 0.9 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
+        // Danh sách mục tiêu
         const targets = [];
-        for(let i = 0; i < 5; i++) {
-            const targetGeo = new THREE.BoxGeometry(2.2, 1.6, 4.5);
+        for(let i = 0; i < 6; i++) {
+            const targetGeo = new THREE.BoxGeometry(2.5, 1.8, 5);
             const targetMat = new THREE.MeshStandardMaterial({ color: 0x650000 });
             const target = new THREE.Mesh(targetGeo, targetMat);
-            target.position.set((Math.random() - 0.5) * 35, 0.8, -20 - Math.random() * 20);
+            target.position.set((Math.random() - 0.5) * 40, 0.9, -20 - Math.random() * 60);
             scene.add(target);
             targets.push(target);
         }
 
-        // Cụm Tháp Pháo & Camera
+        // Cụm Tháp pháo & Nòng pháo
         const turretGroup = new THREE.Group();
         turretGroup.position.set(0, 1.5, 0);
         scene.add(turretGroup);
 
-        camera.position.set(0, 0.3, 0.4);
-        turretGroup.add(camera);
+        // Cụm Nòng Pháo (gắn vào tháp pháo, có thể ngẩng/hạ)
+        const barrelGroup = new THREE.Group();
+        barrelGroup.position.set(0, 0, 0);
+        turretGroup.add(barrelGroup);
 
+        // Gắn Camera vào Cụm Nòng pháo -> Camera nâng/hạ chính xác theo nòng pháo
+        camera.position.set(0, 0.25, 0.3);
+        barrelGroup.add(camera);
+
+        // Nòng pháo
         const barrelGeo = new THREE.CylinderGeometry(0.12, 0.12, 3.5, 8);
         barrelGeo.rotateX(Math.PI / 2);
         const barrelMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
         const barrel = new THREE.Mesh(barrelGeo, barrelMat);
         barrel.position.set(0, 0, -1.75);
-        turretGroup.add(barrel);
+        barrelGroup.add(barrel);
 
         let turretRotationY = 0;
         let barrelRotationX = 0;
         let turnDirection = 0;
 
-        // Xử lý nút bấm
+        // Laser Rangefinder (Tia Laser đo khoảng cách)
+        const raycaster = new THREE.Raycaster();
+        const rangeText = document.getElementById('range-text');
+
+        function updateLaserRangefinder() {
+            const worldDir = new THREE.Vector3();
+            camera.getWorldDirection(worldDir);
+            raycaster.set(camera.getWorldPosition(new THREE.Vector3()), worldDir);
+
+            const intersects = raycaster.intersectObjects([...targets, floor]);
+            if (intersects.length > 0) {
+                const distance = Math.round(intersects[0].distance * 10); // Quy đổi đơn vị đo
+                rangeText.innerText = distance + "m";
+            } else {
+                rangeText.innerText = "> 1000m";
+            }
+        }
+
+        // Xử lý nút bấm điều khiển
         const leftBtn = document.getElementById('left-btn');
         const rightBtn = document.getElementById('right-btn');
         const fireBtn = document.getElementById('fire-btn');
+
+        // Tốc độ quay chậm chuẩn tháp pháo nặng
+        const TURRET_SPEED = 0.012; 
+        const TOUCH_SENSITIVITY = 0.002;
 
         leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); turnDirection = 1; });
         leftBtn.addEventListener('touchend', () => { turnDirection = 0; });
@@ -290,7 +318,10 @@
         rightBtn.addEventListener('mousedown', () => { turnDirection = -1; });
         rightBtn.addEventListener('mouseup', () => { turnDirection = 0; });
 
+        // Cơ chế Đạn & Vật lý
         const bullets = [];
+        const GRAVITY = 0.008; // Trọng lực tác động lên đạn
+
         function shootBullet() {
             const bulletGeo = new THREE.SphereGeometry(0.18, 8, 8);
             const bulletMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
@@ -300,19 +331,19 @@
             barrel.getWorldPosition(worldPos);
             bullet.position.copy(worldPos);
             
+            // Hướng bắn theo góc của nòng pháo
             const velocity = new THREE.Vector3(0, 0, -1);
-            velocity.applyEuler(turretGroup.rotation);
-            velocity.y -= barrelRotationX;
-            velocity.normalize().multiplyScalar(1.5);
+            velocity.applyQuaternion(barrelGroup.getWorldQuaternion(new THREE.Quaternion()));
+            velocity.normalize().multiplyScalar(1.6); // Tốc độ đầu đạn
 
             scene.add(bullet);
-            bullets.push({ mesh: bullet, velocity: velocity, life: 120 });
+            bullets.push({ mesh: bullet, velocity: velocity, life: 150 });
         }
 
         fireBtn.addEventListener('click', shootBullet);
         fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); shootBullet(); });
 
-        // Cảm ứng vuốt
+        // Vuốt cảm ứng màn hình
         let isTouching = false;
         let prevX = 0, prevY = 0;
 
@@ -328,9 +359,13 @@
             const dx = e.touches[0].clientX - prevX;
             const dy = e.touches[0].clientY - prevY;
 
-            turretRotationY -= dx * 0.005;
-            barrelRotationX -= dy * 0.005;
-            barrelRotationX = Math.max(-0.08, Math.min(0.2, barrelRotationX));
+            turretRotationY -= dx * TOUCH_SENSITIVITY;
+            
+            // Vuốt lên -> ngẩng nòng (tăng góc X), Vuốt xuống -> hạ nòng (giảm góc X)
+            barrelRotationX -= dy * TOUCH_SENSITIVITY;
+            
+            // Giới hạn nâng/hạ nòng kiểu tăng T-series (Góc hạ nòng cực kém)
+            barrelRotationX = Math.max(-0.06, Math.min(0.22, barrelRotationX));
 
             prevX = e.touches[0].clientX;
             prevY = e.touches[0].clientY;
@@ -338,36 +373,56 @@
 
         touchArea.addEventListener('touchend', () => { isTouching = false; });
 
+        // Hỗ trợ kéo chuột trên máy tính
+        window.addEventListener('mousemove', (e) => {
+            if(e.buttons === 1) {
+                turretRotationY -= e.movementX * TOUCH_SENSITIVITY;
+                barrelRotationX -= e.movementY * TOUCH_SENSITIVITY;
+                barrelRotationX = Math.max(-0.06, Math.min(0.22, barrelRotationX));
+            }
+        });
+
         // Game Loop
         function animate() {
             requestAnimationFrame(animate);
 
             if (turnDirection !== 0) {
-                turretRotationY += turnDirection * 0.03;
+                turretRotationY += turnDirection * TURRET_SPEED;
             }
 
+            // Áp dụng góc xoay tháp pháo và nâng/hạ nòng
             turretGroup.rotation.y = turretRotationY;
-            barrel.rotation.x = barrelRotationX;
+            barrelGroup.rotation.x = barrelRotationX;
 
-            // Cập nhật đạn & va chạm
+            // Cập nhật Laser Rangefinder liên tục
+            updateLaserRangefinder();
+
+            // Cập nhật Đạn & Trọng lực vật lý
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const b = bullets[i];
+                
+                // Áp dụng gia tốc trọng lực làm đạn rơi dần
+                b.velocity.y -= GRAVITY;
                 b.mesh.position.add(b.velocity);
                 b.life--;
 
+                // Kiểm tra va chạm mục tiêu
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
                     if (b.mesh.position.distanceTo(t.position) < 2) {
-                        t.material.color.set(0x00ff00); // Trúng đích đổi màu báo hiệu
+                        t.material.color.set(0x00ff00); // Trúng đích đổi màu xanh
                         scene.remove(b.mesh);
                         bullets.splice(i, 1);
                         break;
                     }
                 }
 
-                if (b.life <= 0 && bullets[i]) {
-                    scene.remove(b.mesh);
-                    bullets.splice(i, 1);
+                // Chạm đất hoặc hết thời gian sống
+                if (b.mesh.position.y <= 0 || b.life <= 0) {
+                    if (bullets[i]) {
+                        scene.remove(b.mesh);
+                        bullets.splice(i, 1);
+                    }
                 }
             }
 
