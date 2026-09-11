@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Su-30MK2 Flanker vs F-16 Dogfight Simulator</title>
+    <title>Su-30MK2 Flanker vs F-16 - Third Person Dogfight</title>
     <style>
         body {
             margin: 0;
@@ -30,7 +30,6 @@
             pointer-events: none;
         }
 
-        /* Khung radar chỉ báo kẻ thù */
         #radar-box {
             position: absolute;
             top: 10px;
@@ -47,24 +46,7 @@
             pointer-events: none;
         }
 
-        /* Tâm ngắm HUD tiêm kích */
-        #hud-reticle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 140px;
-            height: 140px;
-            border: 1px solid rgba(0, 255, 102, 0.3);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10;
-        }
-        #hud-reticle::before {
-            content: ''; position: absolute; top: 50%; left: 20%; width: 60%; height: 2px; background: #00ff66;
-        }
-
-        /* Cần gạt Throttle / Đốt sau (Afterburner) */
+        /* Throttle & Controls */
         #throttle-container {
             position: absolute;
             left: 15px;
@@ -90,7 +72,6 @@
         }
         .throt-btn:active { background: rgba(0, 255, 102, 0.3); }
 
-        /* Bảng chọn vũ khí & Nút bắn */
         #weapon-panel {
             position: absolute;
             bottom: 25px;
@@ -144,7 +125,7 @@
 
     <!-- HUD Thông số Su-30MK2 -->
     <div id="hud-top">
-        AIRCRAFT: Su-30MK2 FLANKER-G+<br>
+        AIRCRAFT: Su-30MK2 FLANKER-G+ (3RD PERSON)<br>
         SPEED: <span id="spd-txt">0</span> km/h (M <span id="mach-txt">0.0</span>)<br>
         ALTITUDE: <span id="alt-txt">0</span> m | THROTTLE: <span id="throt-txt">50%</span><br>
         TARGET LOCK: <span id="target-txt" style="color:#ff4444;">SEARCHING...</span>
@@ -162,22 +143,21 @@
         <div class="throt-btn" id="throt-dn">▼</div>
     </div>
 
-    <!-- Bảng vũ khí Không Đối Không -->
+    <!-- Bảng vũ khí -->
     <div id="weapon-panel">
         <div class="weapon-btn selected" id="wpn-r73">R-73<br>AAM</div>
         <div class="weapon-btn" id="wpn-gun">GSh-30-1<br>30mm</div>
         <div id="fire-btn">FOX 2</div>
     </div>
 
-    <div id="hud-reticle"></div>
     <div id="touch-area"></div>
 
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x4a75a0); // Bầu trời
-        scene.fog = new THREE.FogExp2(0x4a75a0, 0.0005);
+        scene.background = new THREE.Color(0x4a75a0);
+        scene.fog = new THREE.FogExp2(0x4a75a0, 0.0004);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -191,7 +171,7 @@
         dirLight.position.set(100, 300, 100);
         scene.add(dirLight);
 
-        // Mặt đất / Mây
+        // Mặt đất
         const floorGeo = new THREE.PlaneGeometry(10000, 10000, 16, 16);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x223311, roughness: 0.8 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
@@ -203,9 +183,40 @@
         playerJet.position.set(0, 1000, 0);
         scene.add(playerJet);
 
-        // Gắn Camera vào buồng lái Su-30MK2
-        camera.position.set(0, 1.2, -0.5);
+        // Dựng mô hình 3D Su-30MK2 cơ bản
+        const jetBodyGeo = new THREE.ConeGeometry(1.2, 10, 8);
+        jetBodyGeo.rotateX(Math.PI / 2);
+        const jetMat = new THREE.MeshStandardMaterial({ color: 0x2b4c6f }); // Màu xanh camouflage Su-30
+        const jetBody = new THREE.Mesh(jetBodyGeo, jetMat);
+        playerJet.add(jetBody);
+
+        // Cánh Su-30MK2
+        const wingGeo = new THREE.BoxGeometry(9, 0.1, 4);
+        const wing = new THREE.Mesh(wingGeo, jetMat);
+        wing.position.set(0, 0, 1);
+        playerJet.add(wing);
+
+        // Đuôi đứng kép (Twin Tails) đặc trưng dòng Flanker
+        const tailGeo = new THREE.BoxGeometry(0.1, 2, 1.5);
+        const tail1 = new THREE.Mesh(tailGeo, jetMat);
+        const tail2 = new THREE.Mesh(tailGeo, jetMat);
+        tail1.position.set(-1, 1, 3.5);
+        tail2.position.set(1, 1, 3.5);
+        playerJet.add(tail1);
+        playerJet.add(tail2);
+
+        // --- GÓC NHÌN THỨ 3 (THIRD PERSON CAMERA) ---
+        // Đặt camera phía sau (Z = 18) và phía trên (Y = 5) máy bay
+        camera.position.set(0, 5, 18);
         playerJet.add(camera);
+        camera.lookAt(playerJet.position);
+
+        // Tâm ngắm 3D phía trước mũi máy bay
+        const reticleGeo = new THREE.RingGeometry(0.8, 1, 16);
+        const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00ff66, side: THREE.DoubleSide });
+        const reticle = new THREE.Mesh(reticleGeo, reticleMat);
+        reticle.position.set(0, 0, -40);
+        playerJet.add(reticle);
 
         // Tạo Bot AI F-16 Falcon
         const botJets = [];
@@ -213,7 +224,6 @@
             const f16Group = new THREE.Group();
             f16Group.position.set(x, y, z);
 
-            // Mô hình F-16 đơn giản
             const bodyGeo = new THREE.ConeGeometry(1.5, 8, 5);
             bodyGeo.rotateX(Math.PI / 2);
             const bodyMat = new THREE.MeshStandardMaterial({ color: 0x778899 });
@@ -229,23 +239,20 @@
             botJets.push({ mesh: f16Group, hp: 100, speed: 2.2 });
         }
 
-        // Tạo 3 tiêm kích F-16 làm đối thủ
         createF16(100, 1000, -800);
         createF16(-300, 1200, -1200);
         createF16(400, 900, -1500);
 
-        // Thông số bay của Su-30MK2
-        let throttle = 50; // % công suất động cơ
+        // Thông số bay
+        let throttle = 50;
         let currentSpeed = 2.5;
         let pitchRate = 0, rollRate = 0;
 
-        // Xử lý Cần ga Throttle
         const throtUp = document.getElementById('throt-up');
         const throtDn = document.getElementById('throt-dn');
         throtUp.onclick = () => { throttle = Math.min(100, throttle + 10); };
         throtDn.onclick = () => { throttle = Math.max(20, throttle - 10); };
 
-        // Điều khiển vuốt màn hình (Pitch & Roll)
         let isTouching = false;
         let prevX = 0, prevY = 0;
 
@@ -273,7 +280,7 @@
             pitchRate = 0; rollRate = 0;
         });
 
-        // Tên lửa đuổi & Đạn pháo
+        // Tên lửa đuổi
         const missiles = [];
         const fireBtn = document.getElementById('fire-btn');
 
@@ -297,23 +304,20 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Cập nhật tốc độ theo Throttle
             currentSpeed = THREE.MathUtils.lerp(currentSpeed, (throttle / 100) * 4.5, 0.02);
 
-            // Điều khiển bay cho Su-30MK2
+            // Điều khiển bay
             playerJet.rotateX(pitchRate);
             playerJet.rotateZ(rollRate);
             playerJet.translateZ(-currentSpeed);
 
-            // Giới hạn độ cao không đâm đất
             if (playerJet.position.y < 10) playerJet.position.y = 10;
 
-            // Cập nhật AI Bot F-16
+            // AI F-16
             let nearestBot = null;
             let minDist = 9999;
 
             botJets.forEach(bot => {
-                // F-16 lượn né đạn và duy trì di chuyển
                 bot.mesh.translateZ(-bot.speed);
                 bot.mesh.rotation.y += 0.005;
 
@@ -324,18 +328,16 @@
                 }
             });
 
-            // Cập nhật Tên lửa tầm nhiệt đuổi F-16
+            // Tên lửa R-73
             for (let i = missiles.length - 1; i >= 0; i--) {
                 const m = missiles[i];
                 m.mesh.translateZ(-m.speed);
                 m.life--;
 
-                // Tên lửa tự tìm đến F-16 gần nhất
                 if (nearestBot) {
                     m.mesh.lookAt(nearestBot.mesh.position);
                 }
 
-                // Va chạm nổ mục tiêu
                 if (nearestBot && m.mesh.position.distanceTo(nearestBot.mesh.position) < 15) {
                     scene.remove(nearestBot.mesh);
                     botJets.splice(botJets.indexOf(nearestBot), 1);
@@ -350,7 +352,7 @@
                 }
             }
 
-            // Cập nhật HUD Thông số Su-30MK2
+            // HUD
             const speedKmh = Math.round(currentSpeed * 220);
             document.getElementById('spd-txt').innerText = speedKmh;
             document.getElementById('mach-txt').innerText = (speedKmh / 1225).toFixed(2);
