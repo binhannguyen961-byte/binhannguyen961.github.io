@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ka-50 Black Shark - Realistic Helicopter Simulator</title>
+    <title>Factory Tycoon - Industrial Management Simulator</title>
     <style>
         * { box-sizing: border-box; }
         
@@ -23,7 +23,7 @@
             height: 100%;
         }
 
-        /* --- BẢNG ĐIỀU KHIỂN BÊN TRONG BUỒNG LÁI (COCKPIT HUD) --- */
+        /* --- FACTORY DASHBOARD --- */
         #hud-top {
             position: absolute;
             top: 10px;
@@ -35,10 +35,10 @@
             font-size: 11px;
             line-height: 1.5;
             z-index: 20;
-            min-width: 200px;
+            min-width: 250px;
         }
 
-        /* Bảng nút khởi động thực tế (Startup Switch Panel) */
+        /* Control Panel */
         #startup-panel {
             position: absolute;
             top: 10px;
@@ -51,7 +51,7 @@
             gap: 6px;
             z-index: 20;
             flex-wrap: wrap;
-            max-width: 200px;
+            max-width: 220px;
         }
 
         .switch-btn {
@@ -85,7 +85,7 @@
             cursor: not-allowed;
         }
 
-        /* Nút Collective (Cần nâng hạ độ cao) */
+        /* Production Control */
         #collective-container {
             position: absolute;
             left: 15px;
@@ -122,11 +122,11 @@
         #collective-value {
             font-size: 9px;
             color: #00ff66;
-            width: 60px;
+            width: 80px;
             text-align: center;
         }
 
-        /* Bảng nút chọn vũ khí & Bắn */
+        /* Product Selection Panel */
         #weapon-panel {
             position: absolute;
             bottom: 25px;
@@ -171,8 +171,8 @@
         #fire-btn {
             width: 70px;
             height: 70px;
-            background: rgba(180, 0, 0, 0.8);
-            border: 2px solid #ff3333;
+            background: rgba(0, 100, 0, 0.8);
+            border: 2px solid #00ff66;
             color: #fff;
             font-weight: bold;
             font-size: 13px;
@@ -187,7 +187,7 @@
 
         #fire-btn:active { 
             transform: scale(0.95);
-            background: rgba(255, 51, 51, 1);
+            background: rgba(0, 200, 0, 1);
         }
 
         #fire-btn:disabled {
@@ -195,7 +195,7 @@
             cursor: not-allowed;
         }
 
-        /* Tâm ngắm HUD máy bay */
+        /* HUD Crosshair */
         #hud-sight {
             position: absolute;
             top: 50%;
@@ -291,48 +291,48 @@
 </head>
 <body>
 
-    <!-- HUD Thông số trực thăng Ka-50 -->
+    <!-- FACTORY DASHBOARD -->
     <div id="hud-top">
-        AIRCRAFT: Ka-50 "BLACK SHARK"<br>
-        ALT: <span id="alt-txt">0</span> m | SPD: <span id="spd-txt">0</span> km/h<br>
-        ROTOR: <span id="rpm-txt" style="color:#ff4444;">0%</span> | PITCH: <span id="pitch-txt">0°</span><br>
-        ROLL: <span id="roll-txt">0°</span> | WPN: <span id="wpn-txt">NONE</span>
+        FACTORY: "INDUSTRIAL COMPLEX"<br>
+        REVENUE: $<span id="alt-txt">0</span> | OUTPUT: <span id="spd-txt">0</span> units/h<br>
+        EFFICIENCY: <span id="rpm-txt" style="color:#ff4444;">0%</span> | WORKFORCE: <span id="pitch-txt">0</span><br>
+        POLLUTION: <span id="roll-txt">0%</span> | PRODUCT: <span id="wpn-txt">NONE</span>
     </div>
 
     <!-- FPS Counter -->
     <div id="fps-counter">FPS: <span id="fps">60</span></div>
 
-    <!-- Quy trình khởi động buồng lái (Realistic Startup Switches) -->
+    <!-- FACTORY STARTUP SEQUENCE -->
     <div id="startup-panel">
-        <div class="switch-btn" id="sw-bat">BATT</div>
-        <div class="switch-btn disabled" id="sw-apu">APU</div>
-        <div class="switch-btn disabled" id="sw-eng">ENG</div>
-        <div class="switch-btn disabled" id="sw-rotor">ROTOR</div>
+        <div class="switch-btn" id="sw-bat">POWER</div>
+        <div class="switch-btn disabled" id="sw-apu">GRID</div>
+        <div class="switch-btn disabled" id="sw-eng">LINES</div>
+        <div class="switch-btn disabled" id="sw-rotor">RUN</div>
     </div>
 
-    <!-- Cần nâng Collective -->
+    <!-- PRODUCTION RATE CONTROL -->
     <div id="collective-container">
         <div class="coll-btn" id="coll-up">▲</div>
-        <div style="font-size:9px; color:#00ff66;">COLLECTIVE</div>
+        <div style="font-size:9px; color:#00ff66;">SPEED</div>
         <div class="coll-btn" id="coll-down">▼</div>
         <div id="collective-value">0%</div>
     </div>
 
-    <!-- Bảng vũ khí & Nút bắn -->
+    <!-- PRODUCT SELECTION & SELL -->
     <div id="weapon-panel">
-        <button id="fire-btn" disabled>FIRE</button>
-        <div class="weapon-btn selected" id="wpn-vikhr">VIKHR<br>ATGM</div>
-        <div class="weapon-btn" id="wpn-s8">S-8<br>RKT</div>
-        <div class="weapon-btn" id="wpn-gun">2A42<br>30mm</div>
+        <button id="fire-btn" disabled>SELL</button>
+        <div class="weapon-btn selected" id="wpn-vikhr">CPU<br>CHIPS</div>
+        <div class="weapon-btn" id="wpn-s8">CIRCUIT<br>BOARDS</div>
+        <div class="weapon-btn" id="wpn-gun">POWER<br>UNITS</div>
     </div>
 
-    <!-- Info Panel -->
+    <!-- INFO PANEL -->
     <div id="info-panel">
         CONTROLS:<br>
-        <span style="color:#ffaa00;">Arrow Keys</span> - Pitch/Roll<br>
-        <span style="color:#ffaa00;">W/S</span> - Collective<br>
-        <span style="color:#ffaa00;">Touch</span> - Rotate View<br>
-        <span style="color:#ffaa00;">1/2/3</span> - Select Weapon
+        <span style="color:#ffaa00;">Arrow Keys</span> - Expand<br>
+        <span style="color:#ffaa00;">W/S</span> - Speed<br>
+        <span style="color:#ffaa00;">Touch</span> - Rotate<br>
+        <span style="color:#ffaa00;">1/2/3</span> - Products
     </div>
 
     <div id="hud-sight"></div>
@@ -343,9 +343,9 @@
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a120a);
-        scene.fog = new THREE.FogExp2(0x0a120a, 0.015);
+        scene.fog = new THREE.FogExp2(0x0a120a, 0.008);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
@@ -355,168 +355,214 @@
         let frameCount = 0, lastTime = performance.now(), fps = 60;
         const fpsDisplay = document.getElementById('fps');
 
-        // Ánh sáng
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(30, 50, 30);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(50, 80, 50);
         dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
         scene.add(dirLight);
 
-        // Địa hình chiến trường
-        const floorGeo = new THREE.PlaneGeometry(500, 500, 32, 32);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1c2b1c, wireframe: true });
+        // Ground
+        const floorGeo = new THREE.PlaneGeometry(800, 800, 32, 32);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a3f2a, roughness: 0.8 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Đồ họa trực thăng Ka-50 đơn giản
-        const heliGroup = new THREE.Group();
-        scene.add(heliGroup);
+        // Main Factory Group
+        const factoryGroup = new THREE.Group();
+        scene.add(factoryGroup);
 
-        // Gắn Camera vào buồng lái pháo thủ/phi công Ka-50
-        camera.position.set(0, 1.2, -0.5);
-        heliGroup.add(camera);
+        // Camera positioned above factory
+        camera.position.set(0, 40, 50);
+        camera.lookAt(0, 20, 0);
 
-        // Cánh quạt nâng nâng đồng trục (Coaxial Rotors) đặc trưng của Ka-50
-        const rotorGroup1 = new THREE.Group();
-        const rotorGroup2 = new THREE.Group();
-        rotorGroup1.position.set(0, 2.2, 0);
-        rotorGroup2.position.set(0, 2.6, 0);
-
-        const bladeGeo = new THREE.BoxGeometry(0.2, 0.02, 6);
-        const bladeMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-        
-        const b1 = new THREE.Mesh(bladeGeo, bladeMat);
-        const b2 = new THREE.Mesh(bladeGeo, bladeMat);
-        b1.castShadow = true;
-        b2.castShadow = true;
-        rotorGroup1.add(b1);
-        rotorGroup2.add(b2);
-        heliGroup.add(rotorGroup1);
-        heliGroup.add(rotorGroup2);
-
-        // Trạng thái kỹ thuật & Khởi động
-        let sysBattery = false, sysAPU = false, sysEngine = false, sysRotor = false;
-        let rotorRPM = 0;
-        let collective = 0;
-        let altitude = 0;
-        let speed = 0;
-
-        // Weapon System
-        let selectedWeapon = 'vikhr';
-        const weapons = {
-            vikhr: { name: 'VIKHR ATGM', ammo: 12 },
-            s8: { name: 'S-8 Rocket', ammo: 80 },
-            gun: { name: '2A42 30mm', ammo: 500 }
-        };
-
-        let collInput = 0;
-        let keyInput = { pitch: 0, roll: 0 };
-
-        // Xử lý các Switch Khởi Động
-        const swBat = document.getElementById('sw-bat');
-        const swApu = document.getElementById('sw-apu');
-        const swEng = document.getElementById('sw-eng');
-        const swRotor = document.getElementById('sw-rotor');
-
-        function updateSwitchStates() {
-            swApu.classList.toggle('disabled', !sysBattery);
-            swEng.classList.toggle('disabled', !sysAPU);
-            swRotor.classList.toggle('disabled', !sysEngine);
+        // Create Factory Buildings
+        function createBuilding(x, z, w, d, h, color) {
+            const geo = new THREE.BoxGeometry(w, h, d);
+            const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+            const building = new THREE.Mesh(geo, mat);
+            building.position.set(x, h/2, z);
+            building.castShadow = true;
+            building.receiveShadow = true;
+            return building;
         }
 
-        swBat.onclick = function() {
-            sysBattery = !sysBattery;
+        // Main Factory Building
+        const mainBuilding = createBuilding(0, 0, 30, 20, 15, 0x444444);
+        factoryGroup.add(mainBuilding);
+
+        // Assembly Line 1
+        const line1 = createBuilding(-25, -15, 15, 12, 8, 0x555555);
+        factoryGroup.add(line1);
+
+        // Assembly Line 2
+        const line2 = createBuilding(25, -15, 15, 12, 8, 0x555555);
+        factoryGroup.add(line2);
+
+        // Storage Warehouse
+        const warehouse = createBuilding(-40, 10, 20, 25, 12, 0x333333);
+        factoryGroup.add(warehouse);
+
+        // Power Plant
+        const powerPlant = createBuilding(40, 10, 12, 12, 18, 0x663333);
+        factoryGroup.add(powerPlant);
+
+        // Factory Chimneys (Smoke indicators)
+        function createChimney(x, z, height) {
+            const geo = new THREE.CylinderGeometry(2, 2.5, height, 16);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+            const chimney = new THREE.Mesh(geo, mat);
+            chimney.position.set(x, height/2, z);
+            chimney.castShadow = true;
+            return chimney;
+        }
+
+        const chimney1 = createChimney(35, 15, 20);
+        const chimney2 = createChimney(45, 15, 20);
+        factoryGroup.add(chimney1);
+        factoryGroup.add(chimney2);
+
+        // Production status lights (on/off indicators)
+        const statusLights = [];
+        function createStatusLight(x, z, y = 3) {
+            const light = new THREE.PointLight(0xff0000, 2, 30);
+            light.position.set(x, y, z);
+            factoryGroup.add(light);
+            statusLights.push({ light: light, building: { x, z } });
+            return light;
+        }
+
+        createStatusLight(-25, -15); // Line 1
+        createStatusLight(25, -15);  // Line 2
+        createStatusLight(40, 10);   // Power Plant
+
+        // Game States
+        let sysPower = false, sysGrid = false, sysLines = false, sysRun = false;
+        let efficiency = 0;
+        let revenue = 0;
+        let workforce = 0;
+        let pollution = 0;
+        let production = 0;
+
+        // Products System
+        let selectedProduct = 'vikhr';
+        const products = {
+            vikhr: { name: 'CPU CHIPS', inventory: 0, price: 150 },
+            s8: { name: 'CIRCUIT BOARDS', inventory: 0, price: 200 },
+            gun: { name: 'POWER UNITS', inventory: 0, price: 250 }
+        };
+
+        let prodInput = 0;
+        let cameraRotation = 0;
+
+        // Switch Controls
+        const swPower = document.getElementById('sw-bat');
+        const swGrid = document.getElementById('sw-apu');
+        const swLines = document.getElementById('sw-eng');
+        const swRun = document.getElementById('sw-rotor');
+        const sellBtn = document.getElementById('fire-btn');
+
+        function updateSwitchStates() {
+            swGrid.classList.toggle('disabled', !sysPower);
+            swLines.classList.toggle('disabled', !sysGrid);
+            swRun.classList.toggle('disabled', !sysLines);
+        }
+
+        swPower.onclick = function() {
+            sysPower = !sysPower;
             this.classList.toggle('active');
-            if (!sysBattery) {
-                sysAPU = false;
-                sysEngine = false;
-                sysRotor = false;
-                rotorRPM = 0;
-                collective = 0;
+            if (!sysPower) {
+                sysGrid = false;
+                sysLines = false;
+                sysRun = false;
+                efficiency = 0;
+                production = 0;
             }
             updateSwitchStates();
         };
 
-        swApu.onclick = function() {
-            if (sysBattery) {
-                sysAPU = !sysAPU;
+        swGrid.onclick = function() {
+            if (sysPower) {
+                sysGrid = !sysGrid;
                 this.classList.toggle('active');
-                if (!sysAPU) {
-                    sysEngine = false;
-                    sysRotor = false;
+                if (!sysGrid) {
+                    sysLines = false;
+                    sysRun = false;
                 }
             }
             updateSwitchStates();
         };
 
-        swEng.onclick = function() {
-            if (sysAPU) {
-                sysEngine = !sysEngine;
+        swLines.onclick = function() {
+            if (sysGrid) {
+                sysLines = !sysLines;
                 this.classList.toggle('active');
-                if (!sysEngine) sysRotor = false;
+                if (!sysLines) sysRun = false;
             }
             updateSwitchStates();
         };
 
-        swRotor.onclick = function() {
-            if (sysEngine) {
-                sysRotor = !sysRotor;
+        swRun.onclick = function() {
+            if (sysLines) {
+                sysRun = !sysRun;
                 this.classList.toggle('active');
             }
             updateSwitchStates();
         };
 
-        // Điều khiển Collective
+        // Production Controls
         const collUp = document.getElementById('coll-up');
         const collDown = document.getElementById('coll-down');
-        const fireBtn = document.getElementById('fire-btn');
 
-        collUp.addEventListener('touchstart', (e) => { e.preventDefault(); collInput = 0.05; });
-        collUp.addEventListener('touchend', () => { collInput = 0; });
-        collDown.addEventListener('touchstart', (e) => { e.preventDefault(); collInput = -0.05; });
-        collDown.addEventListener('touchend', () => { collInput = 0; });
+        collUp.addEventListener('touchstart', (e) => { e.preventDefault(); prodInput = 0.05; });
+        collUp.addEventListener('touchend', () => { prodInput = 0; });
+        collDown.addEventListener('touchstart', (e) => { e.preventDefault(); prodInput = -0.05; });
+        collDown.addEventListener('touchend', () => { prodInput = 0; });
 
         // Keyboard Controls
         const keys = {};
         window.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
             
-            // Weapon selection
-            if (e.key === '1') selectWeapon('vikhr');
-            if (e.key === '2') selectWeapon('s8');
-            if (e.key === '3') selectWeapon('gun');
+            if (e.key === '1') selectProduct('vikhr');
+            if (e.key === '2') selectProduct('s8');
+            if (e.key === '3') selectProduct('gun');
         });
         window.addEventListener('keyup', (e) => {
             keys[e.key.toLowerCase()] = false;
         });
 
-        // Weapon Selection
-        function selectWeapon(wpn) {
-            selectedWeapon = wpn;
+        // Product Selection
+        function selectProduct(prod) {
+            selectedProduct = prod;
             document.querySelectorAll('.weapon-btn').forEach(btn => btn.classList.remove('selected'));
-            document.getElementById('wpn-' + wpn).classList.add('selected');
-            document.getElementById('wpn-txt').innerText = weapons[wpn].name;
-            fireBtn.disabled = false;
+            document.getElementById('wpn-' + prod).classList.add('selected');
+            document.getElementById('wpn-txt').innerText = products[prod].name;
+            sellBtn.disabled = false;
         }
 
-        document.getElementById('wpn-vikhr').onclick = () => selectWeapon('vikhr');
-        document.getElementById('wpn-s8').onclick = () => selectWeapon('s8');
-        document.getElementById('wpn-gun').onclick = () => selectWeapon('gun');
+        document.getElementById('wpn-vikhr').onclick = () => selectProduct('vikhr');
+        document.getElementById('wpn-s8').onclick = () => selectProduct('s8');
+        document.getElementById('wpn-gun').onclick = () => selectProduct('gun');
 
-        fireBtn.onclick = () => {
-            if (weapons[selectedWeapon] && weapons[selectedWeapon].ammo > 0) {
-                weapons[selectedWeapon].ammo--;
-                console.log(`Fired ${selectedWeapon}: ${weapons[selectedWeapon].ammo} left`);
+        sellBtn.onclick = () => {
+            if (products[selectedProduct] && products[selectedProduct].inventory > 0) {
+                const amount = Math.min(products[selectedProduct].inventory, 10);
+                revenue += amount * products[selectedProduct].price;
+                products[selectedProduct].inventory -= amount;
+                console.log(`Sold ${amount} x ${selectedProduct}: Revenue +$${amount * products[selectedProduct].price}`);
             }
         };
 
-        // Cảm ứng điều khiển pitch/roll
+        // Camera Touch Controls
         let isTouching = false;
         let prevX = 0, prevY = 0;
-        let targetPitch = 0, targetRoll = 0;
+        let targetCameraY = 40;
 
         const touchArea = document.getElementById('touch-area');
         touchArea.addEventListener('touchstart', (e) => {
@@ -530,8 +576,8 @@
             const dx = e.touches[0].clientX - prevX;
             const dy = e.touches[0].clientY - prevY;
 
-            targetRoll -= dx * 0.001;
-            targetPitch += dy * 0.001;
+            cameraRotation += dx * 0.005;
+            targetCameraY = Math.max(20, Math.min(80, targetCameraY + dy * 0.1));
 
             prevX = e.touches[0].clientX;
             prevY = e.touches[0].clientY;
@@ -539,64 +585,66 @@
 
         touchArea.addEventListener('touchend', () => { isTouching = false; });
 
-        // Game Loop & Vật lý trực thăng
+        // Main Game Loop
         function animate() {
             requestAnimationFrame(animate);
 
             // Update keyboard input
-            if (keys['arrowup']) targetPitch = Math.min(targetPitch + 0.02, Math.PI / 6);
-            if (keys['arrowdown']) targetPitch = Math.max(targetPitch - 0.02, -Math.PI / 6);
-            if (keys['arrowleft']) targetRoll = Math.min(targetRoll + 0.02, Math.PI / 6);
-            if (keys['arrowright']) targetRoll = Math.max(targetRoll - 0.02, -Math.PI / 6);
-            if (keys['w']) collInput = 0.05;
-            if (keys['s']) collInput = -0.05;
-            if (!keys['w'] && !keys['s']) collInput = 0;
+            if (keys['arrowup']) targetCameraY = Math.min(targetCameraY + 1, 100);
+            if (keys['arrowdown']) targetCameraY = Math.max(targetCameraY - 1, 20);
+            if (keys['arrowleft']) cameraRotation += 0.02;
+            if (keys['arrowright']) cameraRotation -= 0.02;
+            if (keys['w']) prodInput = 0.05;
+            if (keys['s']) prodInput = -0.05;
+            if (!keys['w'] && !keys['s']) prodInput = 0;
 
-            // Clamp rotations
-            targetPitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetPitch));
-            targetRoll = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRoll));
+            // Update camera position (orbital)
+            const radius = 60;
+            camera.position.x = Math.sin(cameraRotation) * radius;
+            camera.position.y = targetCameraY;
+            camera.position.z = Math.cos(cameraRotation) * radius;
+            camera.lookAt(0, 20, 0);
 
-            // Logic quay cánh quạt
-            if (sysRotor) {
-                if (rotorRPM < 100) rotorRPM += 0.5;
+            // Production Logic
+            if (sysRun) {
+                if (efficiency < 100) efficiency += 0.8;
+                workforce = Math.floor(50 + efficiency * 0.5);
+                pollution = efficiency * 0.8;
+
+                // Produce goods
+                efficiency = Math.max(0, Math.min(1, efficiency + prodInput));
+                const prodRate = (efficiency / 100) * 5;
+                products[selectedProduct].inventory += prodRate;
+
+                // Update status lights - green when running
+                statusLights.forEach(sl => {
+                    sl.light.color.setHex(0x00ff00);
+                });
             } else {
-                if (rotorRPM > 0) rotorRPM -= 0.3;
+                if (efficiency > 0) efficiency -= 0.3;
+                statusLights.forEach(sl => {
+                    sl.light.color.setHex(0xff0000);
+                });
             }
 
-            // Cánh quạt đồng trục xoay ngược chiều
-            rotorGroup1.rotation.y += (rotorRPM / 100) * 0.4;
-            rotorGroup2.rotation.y -= (rotorRPM / 100) * 0.4;
+            // Clamp efficiency
+            efficiency = Math.max(0, Math.min(100, efficiency));
 
-            // Tính toán lực nâng
-            if (rotorRPM > 70) {
-                collective = Math.max(0, Math.min(1, collective + collInput));
-                const lift = (rotorRPM / 100) * collective * 0.15;
-                
-                heliGroup.position.y += lift - 0.05;
-                if (heliGroup.position.y < 0) heliGroup.position.y = 0;
-
-                // Áp dụng Pitch/Roll
-                heliGroup.rotation.x = THREE.MathUtils.lerp(heliGroup.rotation.x, targetPitch, 0.08);
-                heliGroup.rotation.z = THREE.MathUtils.lerp(heliGroup.rotation.z, targetRoll, 0.08);
-
-                // Di chuyển
-                speed = -heliGroup.rotation.x * 50;
-                heliGroup.translateZ(-speed * 0.005);
+            // Environmental Impact
+            if (sysRun) {
+                pollution = Math.min(100, pollution + efficiency * 0.1);
             } else {
-                heliGroup.rotation.x = THREE.MathUtils.lerp(heliGroup.rotation.x, 0, 0.05);
-                heliGroup.rotation.z = THREE.MathUtils.lerp(heliGroup.rotation.z, 0, 0.05);
-                targetPitch = 0;
-                targetRoll = 0;
+                pollution = Math.max(0, pollution - 0.2);
             }
 
-            // Cập nhật HUD
-            document.getElementById('rpm-txt').innerText = Math.round(rotorRPM) + "%";
-            document.getElementById('rpm-txt').style.color = rotorRPM > 70 ? "#00ff66" : "#ff4444";
-            document.getElementById('alt-txt').innerText = Math.round(heliGroup.position.y * 10);
-            document.getElementById('spd-txt').innerText = Math.round(Math.abs(speed));
-            document.getElementById('pitch-txt').innerText = Math.round(heliGroup.rotation.x * 57.3) + "°";
-            document.getElementById('roll-txt').innerText = Math.round(heliGroup.rotation.z * 57.3) + "°";
-            document.getElementById('collective-value').innerText = Math.round(collective * 100) + "%";
+            // Update HUD Display
+            document.getElementById('rpm-txt').innerText = Math.round(efficiency) + "%";
+            document.getElementById('rpm-txt').style.color = efficiency > 70 ? "#00ff66" : "#ff4444";
+            document.getElementById('alt-txt').innerText = Math.round(revenue);
+            document.getElementById('spd-txt').innerText = Math.round(efficiency * 100);
+            document.getElementById('pitch-txt').innerText = workforce;
+            document.getElementById('roll-txt').innerText = Math.round(pollution) + "%";
+            document.getElementById('collective-value').innerText = Math.round(efficiency) + "%";
 
             // Update FPS
             frameCount++;
