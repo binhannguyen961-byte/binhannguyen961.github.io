@@ -3,66 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ka-50 Black Shark - Realistic Helicopter Simulator</title>
+    <title>Su-30MK2 Flanker vs F-16 Dogfight Simulator</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #050a05;
+            background-color: #000;
             font-family: monospace;
             touch-action: none;
             user-select: none;
             color: #00ff66;
         }
 
-        /* --- BẢNG ĐIỀU KHIỂN BÊN TRONG BUỒNG LÁI (COCKPIT HUD) --- */
+        /* --- JET HUD DISPLAY --- */
         #hud-top {
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(10, 20, 10, 0.85);
+            background: rgba(0, 15, 0, 0.75);
             padding: 8px 12px;
             border: 1px solid #00ff66;
             border-radius: 4px;
             font-size: 11px;
             line-height: 1.5;
             z-index: 20;
+            pointer-events: none;
         }
 
-        /* Bảng nút khởi động thực tế (Startup Switch Panel) */
-        #startup-panel {
+        /* Khung radar chỉ báo kẻ thù */
+        #radar-box {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(15, 15, 15, 0.9);
-            border: 1px solid #444;
-            padding: 8px;
-            border-radius: 6px;
-            display: flex;
-            gap: 6px;
+            width: 100px;
+            height: 100px;
+            border: 1px solid #00ff66;
+            background: rgba(0, 20, 0, 0.6);
+            border-radius: 50%;
             z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
         }
 
-        .switch-btn {
-            background: #222;
-            color: #888;
-            border: 1px solid #555;
-            padding: 6px 8px;
-            font-size: 10px;
-            font-weight: bold;
-            border-radius: 3px;
-            cursor: pointer;
-            text-align: center;
+        /* Tâm ngắm HUD tiêm kích */
+        #hud-reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
         }
-        .switch-btn.active {
-            background: #004400;
-            color: #00ff66;
-            border-color: #00ff66;
-            box-shadow: 0 0 8px rgba(0,255,102,0.5);
+        #hud-reticle::before {
+            content: ''; position: absolute; top: 50%; left: 20%; width: 60%; height: 2px; background: #00ff66;
         }
 
-        /* Nút Collective (Cần nâng hạ độ cao) */
-        #collective-container {
+        /* Cần gạt Throttle / Đốt sau (Afterburner) */
+        #throttle-container {
             position: absolute;
             left: 15px;
             bottom: 30px;
@@ -72,22 +75,22 @@
             gap: 8px;
             z-index: 20;
         }
-        .coll-btn {
+        .throt-btn {
             width: 50px;
             height: 50px;
             background: rgba(0, 0, 0, 0.7);
             border: 2px solid #00ff66;
             color: #00ff66;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .coll-btn:active { background: rgba(0, 255, 102, 0.3); }
+        .throt-btn:active { background: rgba(0, 255, 102, 0.3); }
 
-        /* Bảng nút chọn vũ khí & Bắn */
+        /* Bảng chọn vũ khí & Nút bắn */
         #weapon-panel {
             position: absolute;
             bottom: 25px;
@@ -112,14 +115,14 @@
             text-align: center;
         }
         .weapon-btn.selected {
-            border-color: #ffaa00;
-            color: #ffaa00;
-            background: rgba(255, 170, 0, 0.2);
+            border-color: #00ff66;
+            color: #00ff66;
+            background: rgba(0, 255, 102, 0.2);
         }
         #fire-btn {
             width: 70px;
             height: 70px;
-            background: rgba(180, 0, 0, 0.8);
+            background: rgba(180, 0, 0, 0.85);
             border: 2px solid #ff3333;
             color: #fff;
             font-weight: bold;
@@ -131,23 +134,6 @@
         }
         #fire-btn:active { transform: scale(0.95); }
 
-        /* Tâm ngắm HUD máy bay */
-        #hud-sight {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100px;
-            height: 100px;
-            border: 1px dashed rgba(0, 255, 102, 0.4);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10;
-        }
-        #hud-sight::before {
-            content: ''; position: absolute; top: 50%; left: 35%; width: 30%; height: 2px; background: #00ff66;
-        }
-
         #touch-area {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%; z-index: 5;
@@ -156,114 +142,112 @@
 </head>
 <body>
 
-    <!-- HUD Thông số trực thăng Ka-50 -->
+    <!-- HUD Thông số Su-30MK2 -->
     <div id="hud-top">
-        AIRCRAFT: Ka-50 "BLACK SHARK"<br>
-        ALT (ĐỘ CAO): <span id="alt-txt">0</span> m | SPD: <span id="spd-txt">0</span> km/h<br>
-        ROTOR RPM: <span id="rpm-txt" style="color:#ff4444;">0%</span> | PITCH: <span id="pitch-txt">0°</span>
+        AIRCRAFT: Su-30MK2 FLANKER-G+<br>
+        SPEED: <span id="spd-txt">0</span> km/h (M <span id="mach-txt">0.0</span>)<br>
+        ALTITUDE: <span id="alt-txt">0</span> m | THROTTLE: <span id="throt-txt">50%</span><br>
+        TARGET LOCK: <span id="target-txt" style="color:#ff4444;">SEARCHING...</span>
     </div>
 
-    <!-- Quy trình khởi động buồng lái (Realistic Startup Switches) -->
-    <div id="startup-panel">
-        <div class="switch-btn" id="sw-bat">1. BATT</div>
-        <div class="switch-btn" id="sw-apu">2. APU</div>
-        <div class="switch-btn" id="sw-eng">3. ENG</div>
-        <div class="switch-btn" id="sw-rotor">4. ROTOR</div>
+    <!-- Khung Radar thu nhỏ -->
+    <div id="radar-box">
+        <div style="font-size: 8px; position: absolute; top: 4px; color: #00ff66;">RADAR 20KM</div>
     </div>
 
-    <!-- Cần nâng Collective -->
-    <div id="collective-container">
-        <div class="coll-btn" id="coll-up">▲</div>
-        <div style="font-size:9px; color:#00ff66;">COLLECTIVE</div>
-        <div class="coll-btn" id="coll-down">▼</div>
+    <!-- Cần ga Throttle -->
+    <div id="throttle-container">
+        <div class="throt-btn" id="throt-up">▲</div>
+        <div style="font-size:8px; color:#00ff66;">THROTTLE</div>
+        <div class="throt-btn" id="throt-dn">▼</div>
     </div>
 
-    <!-- Bảng vũ khí & Nút bắn -->
+    <!-- Bảng vũ khí Không Đối Không -->
     <div id="weapon-panel">
-        <div class="weapon-btn selected" id="wpn-vikhr">VIKHR<br>ATGM</div>
-        <div class="weapon-btn" id="wpn-s8">S-8<br>ROCKET</div>
-        <div class="weapon-btn" id="wpn-gun">2A42<br>30mm</div>
-        <div id="fire-btn">FIRE</div>
+        <div class="weapon-btn selected" id="wpn-r73">R-73<br>AAM</div>
+        <div class="weapon-btn" id="wpn-gun">GSh-30-1<br>30mm</div>
+        <div id="fire-btn">FOX 2</div>
     </div>
 
-    <div id="hud-sight"></div>
+    <div id="hud-reticle"></div>
     <div id="touch-area"></div>
 
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a120a);
-        scene.fog = new THREE.FogExp2(0x0a120a, 0.015);
+        scene.background = new THREE.Color(0x4a75a0); // Bầu trời
+        scene.fog = new THREE.FogExp2(0x4a75a0, 0.0005);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
         // Ánh sáng
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(30, 50, 30);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(100, 300, 100);
         scene.add(dirLight);
 
-        // Địa hình chiến trường
-        const floorGeo = new THREE.PlaneGeometry(500, 500, 32, 32);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1c2b1c, wireframe: true });
+        // Mặt đất / Mây
+        const floorGeo = new THREE.PlaneGeometry(10000, 10000, 16, 16);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x223311, roughness: 0.8 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
-        // Đồ họa trực thăng Ka-50 đơn giản
-        const heliGroup = new THREE.Group();
-        scene.add(heliGroup);
+        // Máy bay Su-30MK2 (Người chơi)
+        const playerJet = new THREE.Group();
+        playerJet.position.set(0, 1000, 0);
+        scene.add(playerJet);
 
-        // Gắn Camera vào buồng lái pháo thủ/phi công Ka-50
+        // Gắn Camera vào buồng lái Su-30MK2
         camera.position.set(0, 1.2, -0.5);
-        heliGroup.add(camera);
+        playerJet.add(camera);
 
-        // Cánh quạt nâng nâng đồng trục (Coaxial Rotors) đặc trưng của Ka-50
-        const rotorGroup1 = new THREE.Group();
-        const rotorGroup2 = new THREE.Group();
-        rotorGroup1.position.set(0, 2.2, 0);
-        rotorGroup2.position.set(0, 2.6, 0);
+        // Tạo Bot AI F-16 Falcon
+        const botJets = [];
+        function createF16(x, y, z) {
+            const f16Group = new THREE.Group();
+            f16Group.position.set(x, y, z);
 
-        const bladeGeo = new THREE.BoxGeometry(0.2, 0.02, 6);
-        const bladeMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-        
-        const b1 = new THREE.Mesh(bladeGeo, bladeMat);
-        const b2 = new THREE.Mesh(bladeGeo, bladeMat);
-        rotorGroup1.add(b1); rotorGroup2.add(b2);
-        heliGroup.add(rotorGroup1); heliGroup.add(rotorGroup2);
+            // Mô hình F-16 đơn giản
+            const bodyGeo = new THREE.ConeGeometry(1.5, 8, 5);
+            bodyGeo.rotateX(Math.PI / 2);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x778899 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            f16Group.add(body);
 
-        // Trạng thái kỹ thuật & Khởi động
-        let sysBattery = false, sysAPU = false, sysEngine = false, sysRotor = false;
-        let rotorRPM = 0;
-        let collective = 0; // Lực nâng cánh quạt
-        let altitude = 0;
-        let speed = 0;
+            const wingGeo = new THREE.BoxGeometry(7, 0.1, 3);
+            const wing = new THREE.Mesh(wingGeo, bodyMat);
+            wing.position.set(0, 0, 1);
+            f16Group.add(wing);
 
-        // Xử lý các Switch Khởi Động
-        document.getElementById('sw-bat').onclick = function() { sysBattery = !sysBattery; this.classList.toggle('active'); };
-        document.getElementById('sw-apu').onclick = function() { if(sysBattery) { sysAPU = !sysAPU; this.classList.toggle('active'); } };
-        document.getElementById('sw-eng').onclick = function() { if(sysAPU) { sysEngine = !sysEngine; this.classList.toggle('active'); } };
-        document.getElementById('sw-rotor').onclick = function() { if(sysEngine) { sysRotor = !sysRotor; this.classList.toggle('active'); } };
+            scene.add(f16Group);
+            botJets.push({ mesh: f16Group, hp: 100, speed: 2.2 });
+        }
 
-        // Điều khiển Collective
-        const collUp = document.getElementById('coll-up');
-        const collDown = document.getElementById('coll-down');
-        let collInput = 0;
+        // Tạo 3 tiêm kích F-16 làm đối thủ
+        createF16(100, 1000, -800);
+        createF16(-300, 1200, -1200);
+        createF16(400, 900, -1500);
 
-        collUp.addEventListener('touchstart', (e) => { e.preventDefault(); collInput = 0.05; });
-        collUp.addEventListener('touchend', () => { collInput = 0; });
-        collDown.addEventListener('touchstart', (e) => { e.preventDefault(); collInput = -0.05; });
-        collDown.addEventListener('touchend', () => { collInput = 0; });
+        // Thông số bay của Su-30MK2
+        let throttle = 50; // % công suất động cơ
+        let currentSpeed = 2.5;
+        let pitchRate = 0, rollRate = 0;
 
-        // Cảm ứng điều khiển pitch/roll (Nghiêng thân)
+        // Xử lý Cần ga Throttle
+        const throtUp = document.getElementById('throt-up');
+        const throtDn = document.getElementById('throt-dn');
+        throtUp.onclick = () => { throttle = Math.min(100, throttle + 10); };
+        throtDn.onclick = () => { throttle = Math.max(20, throttle - 10); };
+
+        // Điều khiển vuốt màn hình (Pitch & Roll)
         let isTouching = false;
         let prevX = 0, prevY = 0;
-        let targetPitch = 0, targetRoll = 0, targetYaw = 0;
 
         const touchArea = document.getElementById('touch-area');
         touchArea.addEventListener('touchstart', (e) => {
@@ -277,53 +261,109 @@
             const dx = e.touches[0].clientX - prevX;
             const dy = e.touches[0].clientY - prevY;
 
-            targetRoll -= dx * 0.001;
-            targetPitch += dy * 0.001;
+            rollRate = -dx * 0.0008;
+            pitchRate = -dy * 0.0008;
 
             prevX = e.touches[0].clientX;
             prevY = e.touches[0].clientY;
         });
 
-        touchArea.addEventListener('touchend', () => { isTouching = false; });
+        touchArea.addEventListener('touchend', () => { 
+            isTouching = false; 
+            pitchRate = 0; rollRate = 0;
+        });
 
-        // Game Loop & Vật lý trực thăng
+        // Tên lửa đuổi & Đạn pháo
+        const missiles = [];
+        const fireBtn = document.getElementById('fire-btn');
+
+        function launchR73() {
+            const mGeo = new THREE.CylinderGeometry(0.1, 0.1, 2, 8);
+            mGeo.rotateX(Math.PI / 2);
+            const mMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+            const missile = new THREE.Mesh(mGeo, mMat);
+
+            missile.position.copy(playerJet.position);
+            missile.quaternion.copy(playerJet.quaternion);
+
+            scene.add(missile);
+            missiles.push({ mesh: missile, life: 300, speed: 5.0 });
+        }
+
+        fireBtn.addEventListener('click', launchR73);
+        fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); launchR73(); });
+
+        // Game Loop
         function animate() {
             requestAnimationFrame(animate);
 
-            // Logic quay cánh quạt theo trạng thái Động cơ
-            if (sysRotor) {
-                if (rotorRPM < 100) rotorRPM += 0.5;
+            // Cập nhật tốc độ theo Throttle
+            currentSpeed = THREE.MathUtils.lerp(currentSpeed, (throttle / 100) * 4.5, 0.02);
+
+            // Điều khiển bay cho Su-30MK2
+            playerJet.rotateX(pitchRate);
+            playerJet.rotateZ(rollRate);
+            playerJet.translateZ(-currentSpeed);
+
+            // Giới hạn độ cao không đâm đất
+            if (playerJet.position.y < 10) playerJet.position.y = 10;
+
+            // Cập nhật AI Bot F-16
+            let nearestBot = null;
+            let minDist = 9999;
+
+            botJets.forEach(bot => {
+                // F-16 lượn né đạn và duy trì di chuyển
+                bot.mesh.translateZ(-bot.speed);
+                bot.mesh.rotation.y += 0.005;
+
+                const dist = playerJet.position.distanceTo(bot.mesh.position);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestBot = bot;
+                }
+            });
+
+            // Cập nhật Tên lửa tầm nhiệt đuổi F-16
+            for (let i = missiles.length - 1; i >= 0; i--) {
+                const m = missiles[i];
+                m.mesh.translateZ(-m.speed);
+                m.life--;
+
+                // Tên lửa tự tìm đến F-16 gần nhất
+                if (nearestBot) {
+                    m.mesh.lookAt(nearestBot.mesh.position);
+                }
+
+                // Va chạm nổ mục tiêu
+                if (nearestBot && m.mesh.position.distanceTo(nearestBot.mesh.position) < 15) {
+                    scene.remove(nearestBot.mesh);
+                    botJets.splice(botJets.indexOf(nearestBot), 1);
+                    scene.remove(m.mesh);
+                    missiles.splice(i, 1);
+                    break;
+                }
+
+                if (m.life <= 0 && missiles[i]) {
+                    scene.remove(m.mesh);
+                    missiles.splice(i, 1);
+                }
+            }
+
+            // Cập nhật HUD Thông số Su-30MK2
+            const speedKmh = Math.round(currentSpeed * 220);
+            document.getElementById('spd-txt').innerText = speedKmh;
+            document.getElementById('mach-txt').innerText = (speedKmh / 1225).toFixed(2);
+            document.getElementById('alt-txt').innerText = Math.round(playerJet.position.y);
+            document.getElementById('throt-txt').innerText = throttle + "%";
+
+            if (nearestBot && minDist < 2000) {
+                document.getElementById('target-txt').innerText = "LOCK F-16 (" + Math.round(minDist) + "m)";
+                document.getElementById('target-txt').style.color = "#00ff66";
             } else {
-                if (rotorRPM > 0) rotorRPM -= 0.3;
+                document.getElementById('target-txt').innerText = "SEARCHING...";
+                document.getElementById('target-txt').style.color = "#ff4444";
             }
-
-            // Cánh quạt đồng trục xoay ngược chiều nhau
-            rotorGroup1.rotation.y += (rotorRPM / 100) * 0.4;
-            rotorGroup2.rotation.y -= (rotorRPM / 100) * 0.4;
-
-            // Tính toán lực nâng (Thrust) dựa trên RPM và Collective
-            if (rotorRPM > 70) {
-                collective = Math.max(0, Math.min(1, collective + collInput));
-                const lift = (rotorRPM / 100) * collective * 0.15;
-                
-                heliGroup.position.y += lift - 0.05; // 0.05 là trọng lực
-                if (heliGroup.position.y < 0) heliGroup.position.y = 0;
-
-                // Áp dụng Pitch/Roll
-                heliGroup.rotation.x = THREE.MathUtils.lerp(heliGroup.rotation.x, targetPitch, 0.05);
-                heliGroup.rotation.z = THREE.MathUtils.lerp(heliGroup.rotation.z, targetRoll, 0.05);
-
-                // Di chuyển tiến về phía trước khi chúc mũi xuống (Pitch)
-                speed = -heliGroup.rotation.x * 50;
-                heliGroup.translateZ(-speed * 0.005);
-            }
-
-            // Cập nhật thông số HUD
-            document.getElementById('rpm-txt').innerText = Math.round(rotorRPM) + "%";
-            document.getElementById('rpm-txt').style.color = rotorRPM > 70 ? "#00ff66" : "#ff4444";
-            document.getElementById('alt-txt').innerText = Math.round(heliGroup.position.y * 10);
-            document.getElementById('spd-txt').innerText = Math.round(Math.abs(speed));
-            document.getElementById('pitch-txt').innerText = Math.round(heliGroup.rotation.x * 57.3) + "°";
 
             renderer.render(scene, camera);
         }
