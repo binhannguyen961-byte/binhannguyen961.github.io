@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
     <title>No Player Online - Haunted Multiplayer Server</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
@@ -11,6 +14,9 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         body, html {
@@ -20,8 +26,8 @@
             overflow: hidden;
             font-family: 'Courier Prime', monospace;
             color: #00ff00;
-            user-select: none;
             -webkit-user-select: none;
+            touch-action: none;
         }
 
         /* Main Canvas */
@@ -30,6 +36,7 @@
             width: 100vw;
             height: 100vh;
             image-rendering: pixelated;
+            touch-action: none;
         }
 
         /* CRT Scan Lines Overlay */
@@ -79,6 +86,7 @@
             color: #00ff00;
             text-shadow: 0 0 10px #00ff00;
             animation: flicker 0.15s infinite;
+            padding: 20px;
         }
 
         @keyframes flicker {
@@ -87,41 +95,45 @@
         }
 
         #menu-screen h1 {
-            font-size: 4rem;
+            font-size: clamp(2rem, 8vw, 4rem);
             margin-bottom: 20px;
             letter-spacing: 3px;
             text-transform: uppercase;
             font-weight: bold;
             text-shadow: 0 0 20px #00ff00, 0 0 40px rgba(0, 255, 0, 0.5);
+            text-align: center;
         }
 
         #menu-screen .subtitle {
-            font-size: 1.2rem;
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
             margin-bottom: 40px;
             color: #00aa00;
             text-shadow: 0 0 5px #00ff00;
+            text-align: center;
         }
 
         .server-list {
-            width: 600px;
-            max-height: 300px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 50vh;
             border: 2px solid #00ff00;
             background: #001100;
-            padding: 20px;
+            padding: 15px;
             margin-bottom: 30px;
             overflow-y: auto;
         }
 
         .server-item {
-            padding: 10px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             border-left: 3px solid #00ff00;
             cursor: pointer;
             transition: background 0.2s;
+            border-radius: 3px;
         }
 
-        .server-item:hover {
-            background: rgba(0, 255, 0, 0.1);
+        .server-item:active {
+            background: rgba(0, 255, 0, 0.15);
         }
 
         .server-item.selected {
@@ -132,17 +144,18 @@
         .server-name {
             font-weight: bold;
             color: #00ff00;
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
         }
 
         .server-info {
-            font-size: 0.9rem;
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
             color: #00aa00;
             margin-top: 3px;
         }
 
         #join-button {
-            padding: 12px 40px;
-            font-size: 1.2rem;
+            padding: 15px 30px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
             background: none;
             border: 2px solid #00ff00;
             color: #00ff00;
@@ -153,9 +166,12 @@
             transition: all 0.2s;
             text-shadow: 0 0 10px #00ff00;
             font-weight: bold;
+            border-radius: 4px;
+            width: 90%;
+            max-width: 300px;
         }
 
-        #join-button:hover {
+        #join-button:active {
             background: #00ff00;
             color: #000;
             box-shadow: 0 0 20px #00ff00;
@@ -182,24 +198,30 @@
             display: block;
         }
 
+        /* Responsive HUD Elements */
+        .hud-element {
+            font-size: clamp(0.65rem, 1.5vw, 0.9rem);
+        }
+
         /* Top HUD - Server Info */
         #top-hud {
             position: absolute;
             top: 10px;
             left: 10px;
+            right: auto;
             background: rgba(0, 30, 0, 0.8);
             border: 2px solid #00ff00;
-            padding: 10px;
-            font-size: 0.9rem;
+            padding: 8px;
             color: #00ff00;
             text-shadow: 0 0 5px #00ff00;
             z-index: 51;
-            min-width: 300px;
+            min-width: auto;
+            max-width: calc(100% - 20px);
             box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
         }
 
         #server-status {
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         #player-count {
@@ -207,23 +229,24 @@
         }
 
         #current-map {
-            margin-top: 5px;
-            font-size: 0.85rem;
+            margin-top: 3px;
+            font-size: clamp(0.6rem, 1.3vw, 0.8rem);
             color: #00aa00;
         }
 
         /* Chat Console */
         #chat-console {
             position: absolute;
-            bottom: 120px;
+            bottom: 70px;
             left: 10px;
             background: rgba(0, 30, 0, 0.9);
             border: 2px solid #00ff00;
-            padding: 8px;
-            width: 500px;
-            height: 200px;
+            padding: 6px;
+            width: calc(100% - 20px);
+            max-width: 500px;
+            height: 120px;
             overflow-y: auto;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: #00ff00;
             text-shadow: 0 0 3px #00ff00;
             z-index: 51;
@@ -231,11 +254,12 @@
         }
 
         .chat-message {
-            margin-bottom: 3px;
-            padding: 2px 0;
+            margin-bottom: 2px;
+            padding: 1px 0;
             border-left: 2px solid transparent;
-            padding-left: 5px;
+            padding-left: 4px;
             animation: fadeIn 0.3s ease-in;
+            line-height: 1.3;
         }
 
         @keyframes fadeIn {
@@ -323,6 +347,44 @@
             transform: translateY(-50%);
         }
 
+        /* Mobile Controls */
+        #mobile-controls {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            display: none;
+            z-index: 52;
+            gap: 10px;
+        }
+
+        #mobile-controls.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .mobile-btn:active {
+            background: rgba(0, 255, 0, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+        }
+
         /* Weapon/Item Panel */
         #weapon-panel {
             position: absolute;
@@ -330,35 +392,41 @@
             right: 15px;
             background: rgba(0, 30, 0, 0.8);
             border: 2px solid #00ff00;
-            padding: 10px;
+            padding: 8px;
             z-index: 51;
-            min-width: 200px;
+            min-width: 150px;
             box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+            font-size: clamp(0.65rem, 1.5vw, 0.9rem);
         }
 
         #current-weapon {
             color: #ffff00;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             text-shadow: 0 0 5px #ffff00;
         }
 
         #ammo-display {
             color: #00ff00;
-            font-size: 0.9rem;
+            font-size: clamp(0.6rem, 1.3vw, 0.85rem);
         }
 
         /* Radar/Minimap */
         #radar {
             position: absolute;
             bottom: 15px;
-            left: 520px;
-            width: 150px;
-            height: 150px;
+            left: 10px;
+            width: 120px;
+            height: 120px;
             background: rgba(0, 30, 0, 0.8);
             border: 2px solid #00ff00;
             z-index: 51;
             box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+            display: none;
+        }
+
+        #radar.visible {
+            display: block;
         }
 
         #radar-canvas {
@@ -399,7 +467,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 3rem;
+            font-size: clamp(1.5rem, 6vw, 3rem);
             color: #ff0000;
             text-shadow: 0 0 30px #ff0000;
             display: none;
@@ -408,32 +476,194 @@
             text-align: center;
         }
 
-        /* Key Pickup Notification */
-        #key-notification {
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 165, 0, 0.9);
-            border: 3px solid #ff8800;
-            padding: 20px;
-            color: #000;
-            font-weight: bold;
-            font-size: 1.2rem;
+        /* Joystick area for mobile */
+        #touch-joystick {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            border-radius: 50%;
+            background: rgba(0, 30, 0, 0.3);
             display: none;
             z-index: 52;
-            text-shadow: none;
-            animation: slideDown 0.5s ease-out;
         }
 
-        @keyframes slideDown {
-            from {
-                transform: translate(-50%, -100px);
-                opacity: 0;
+        #touch-joystick.active {
+            display: block;
+        }
+
+        #joystick-cursor {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 255, 0, 0.5);
+            border: 2px solid #00ff00;
+            border-radius: 50%;
+            top: 35px;
+            left: 35px;
+            pointer-events: none;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            #radar {
+                width: 100px;
+                height: 100px;
             }
-            to {
-                transform: translateX(-50%);
-                opacity: 1;
+
+            #chat-console {
+                height: 100px;
+            }
+
+            #weapon-panel {
+                min-width: 140px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #top-hud {
+                font-size: 0.7rem;
+                padding: 6px;
+            }
+
+            #chat-console {
+                max-width: calc(100% - 20px);
+                bottom: 60px;
+                height: 80px;
+            }
+
+            #weapon-panel {
+                min-width: 130px;
+                padding: 6px;
+                font-size: 0.65rem;
+            }
+
+            #radar {
+                width: 90px;
+                height: 90px;
+            }
+
+            #touch-joystick {
+                width: 90px;
+                height: 90px;
+            }
+
+            #joystick-cursor {
+                width: 25px;
+                height: 25px;
+                top: 32.5px;
+                left: 32.5px;
+            }
+
+            .mobile-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+
+            #menu-screen h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #top-hud {
+                font-size: 0.6rem;
+                padding: 5px;
+                top: 5px;
+                left: 5px;
+            }
+
+            #chat-console {
+                font-size: 0.65rem;
+                bottom: 55px;
+                left: 5px;
+                width: calc(100% - 10px);
+                height: 70px;
+                padding: 4px;
+            }
+
+            #weapon-panel {
+                min-width: 120px;
+                padding: 5px;
+                font-size: 0.6rem;
+                right: 5px;
+                bottom: 5px;
+            }
+
+            #radar {
+                width: 80px;
+                height: 80px;
+                left: 5px;
+                bottom: 5px;
+            }
+
+            #touch-joystick {
+                width: 80px;
+                height: 80px;
+                left: 10px;
+                bottom: 10px;
+            }
+
+            #joystick-cursor {
+                width: 22px;
+                height: 22px;
+                top: 29px;
+                left: 29px;
+            }
+
+            .mobile-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+
+            #menu-screen h1 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+
+            #menu-screen .subtitle {
+                margin-bottom: 20px;
+            }
+
+            .server-list {
+                padding: 10px;
+                margin-bottom: 20px;
+                max-height: 40vh;
+            }
+
+            .server-item {
+                padding: 10px;
+                margin: 5px 0;
+            }
+
+            #join-button {
+                padding: 12px 20px;
+            }
+        }
+
+        /* Landscape mode */
+        @media (max-height: 500px) {
+            #chat-console {
+                height: 60px;
+            }
+
+            #menu-screen h1 {
+                margin-bottom: 10px;
+                font-size: 1.5rem;
+            }
+
+            #menu-screen .subtitle {
+                margin-bottom: 15px;
+                font-size: 0.9rem;
+            }
+
+            .server-list {
+                max-height: 200px;
+                margin-bottom: 15px;
             }
         }
     </style>
@@ -455,8 +685,8 @@
 
     <!-- Menu Screen -->
     <div id="menu-screen">
-        <h1>HALF-LIFE: NO PLAYER ONLINE</h1>
-        <div class="subtitle">A "Haunted Multiplayer Server" Experience</div>
+        <h1>NO PLAYER ONLINE</h1>
+        <div class="subtitle">Haunted Multiplayer Server</div>
         
         <div class="server-list" id="server-list">
             <!-- Servers populated by JS -->
@@ -467,7 +697,7 @@
 
     <!-- In-Game HUD -->
     <div id="hud">
-        <div id="top-hud">
+        <div id="top-hud" class="hud-element">
             <div id="server-status">
                 Server: <span id="server-name">NA_CTF_01</span>
             </div>
@@ -481,11 +711,15 @@
 
         <div id="chat-console"></div>
 
-        <div id="radar">
-            <canvas id="radar-canvas" width="150" height="150"></canvas>
+        <div id="touch-joystick">
+            <div id="joystick-cursor"></div>
         </div>
 
-        <div id="weapon-panel">
+        <div id="radar">
+            <canvas id="radar-canvas" width="120" height="120"></canvas>
+        </div>
+
+        <div id="weapon-panel" class="hud-element">
             <div id="current-weapon">Crowbar</div>
             <div id="ammo-display">Ammo: ∞</div>
         </div>
@@ -496,13 +730,36 @@
             <div class="crosshair-line crosshair-v"></div>
         </div>
 
+        <div id="mobile-controls">
+            <button class="mobile-btn" id="btn-up">↑</button>
+            <div style="display:flex; gap:5px;">
+                <button class="mobile-btn" id="btn-left">←</button>
+                <button class="mobile-btn" id="btn-down">↓</button>
+                <button class="mobile-btn" id="btn-right">→</button>
+            </div>
+        </div>
+
         <div id="spectator-notice">YOU ARE IN SPECTATOR MODE</div>
-        <div id="key-notification"></div>
     </div>
 
     <script type="module">
         import * as THREE from 'three';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        // Detect platform
+        const isMobile = () => {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        };
+
+        const isTablet = () => {
+            return /iPad|Android/i.test(navigator.userAgent);
+        };
+
+        const platform = {
+            isMobile: isMobile(),
+            isTablet: isTablet(),
+            isLandscape: window.innerWidth > window.innerHeight
+        };
 
         // ============================================
         // GAME STATE & CONFIG
@@ -548,7 +805,7 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowShadowMap;
-        renderer.setPixelRatio(1);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Limit pixel ratio for performance
 
         // Lighting
         const ambientLight = new THREE.AmbientLight(0x888888, 0.6);
@@ -570,7 +827,6 @@
         // LEVEL BUILDER
         // ============================================
         function createCTFEmptyMap() {
-            // Floor
             const floorGeo = new THREE.PlaneGeometry(200, 200);
             const floorMat = new THREE.MeshStandardMaterial({
                 color: 0x222222,
@@ -583,13 +839,11 @@
             floor.position.y = 0;
             scene.add(floor);
 
-            // Walls and structures
             const wallMat = new THREE.MeshStandardMaterial({
                 color: 0x3a3a3a,
                 roughness: 0.8
             });
 
-            // Main walls
             const walls = [
                 { pos: [0, 0, -80], size: [200, 20, 5] },
                 { pos: [0, 0, 80], size: [200, 20, 5] },
@@ -606,13 +860,11 @@
                 scene.add(mesh);
             });
 
-            // CTF Flags
             const flagPole1 = createFlagPole(50, 10, 'red');
             const flagPole2 = createFlagPole(-50, -10, 'blue');
             scene.add(flagPole1);
             scene.add(flagPole2);
 
-            // Boxes and obstacles
             const boxMat = new THREE.MeshStandardMaterial({
                 color: 0x555555,
                 roughness: 0.7
@@ -632,7 +884,6 @@
                 scene.add(mesh);
             });
 
-            // Pillars
             const pillarMat = new THREE.MeshStandardMaterial({
                 color: 0x404040,
                 roughness: 0.9
@@ -676,8 +927,12 @@
         // ============================================
         const controls = new PointerLockControls(camera, document.body);
         const velocity = new THREE.Vector3();
-        const direction = new THREE.Vector3();
         const keys = {};
+
+        // Mobile joystick
+        let joystickActive = false;
+        let joystickX = 0;
+        let joystickY = 0;
 
         document.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
@@ -691,6 +946,15 @@
             gameState.isPlaying = true;
             document.getElementById('menu-screen').classList.add('hidden');
             document.getElementById('hud').classList.add('active');
+            
+            // Show mobile controls if on mobile
+            if (platform.isMobile && !platform.isTablet) {
+                document.getElementById('mobile-controls').classList.add('active');
+                document.getElementById('touch-joystick').classList.add('active');
+            } else if (platform.isTablet) {
+                document.getElementById('touch-joystick').classList.add('active');
+                document.getElementById('radar').classList.add('visible');
+            }
         });
 
         controls.addEventListener('unlock', () => {
@@ -698,6 +962,75 @@
             document.getElementById('menu-screen').classList.remove('hidden');
             document.getElementById('hud').classList.remove('active');
         });
+
+        // ============================================
+        // MOBILE TOUCH CONTROLS
+        // ============================================
+        if (platform.isMobile || platform.isTablet) {
+            // Touch joystick
+            const joystickArea = document.getElementById('touch-joystick');
+            const joystickCursor = document.getElementById('joystick-cursor');
+
+            joystickArea.addEventListener('touchstart', (e) => {
+                joystickActive = true;
+            });
+
+            joystickArea.addEventListener('touchmove', (e) => {
+                if (!joystickActive) return;
+                const touch = e.touches[0];
+                const rect = joystickArea.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                joystickX = (touch.clientX - centerX) / (rect.width / 2);
+                joystickY = (touch.clientY - centerY) / (rect.height / 2);
+                
+                joystickX = Math.max(-1, Math.min(1, joystickX));
+                joystickY = Math.max(-1, Math.min(1, joystickY));
+
+                const moveX = joystickX * 25;
+                const moveY = joystickY * 25;
+                joystickCursor.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+            });
+
+            joystickArea.addEventListener('touchend', () => {
+                joystickActive = false;
+                joystickX = 0;
+                joystickY = 0;
+                joystickCursor.style.transform = 'translate(-50%, -50%)';
+            });
+
+            // Mobile button controls
+            const btnUp = document.getElementById('btn-up');
+            const btnDown = document.getElementById('btn-down');
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            if (btnUp) {
+                btnUp.addEventListener('touchstart', () => { keys['w'] = true; });
+                btnUp.addEventListener('touchend', () => { keys['w'] = false; });
+            }
+
+            if (btnDown) {
+                btnDown.addEventListener('touchstart', () => { keys['s'] = true; });
+                btnDown.addEventListener('touchend', () => { keys['s'] = false; });
+            }
+
+            if (btnLeft) {
+                btnLeft.addEventListener('touchstart', () => { keys['a'] = true; });
+                btnLeft.addEventListener('touchend', () => { keys['a'] = false; });
+            }
+
+            if (btnRight) {
+                btnRight.addEventListener('touchstart', () => { keys['d'] = true; });
+                btnRight.addEventListener('touchend', () => { keys['d'] = false; });
+            }
+
+            // Prevent default touch behaviors
+            document.addEventListener('touchmove', (e) => {
+                if (gameState.isPlaying) e.preventDefault();
+            }, { passive: false });
+        }
 
         // ============================================
         // CHAT SYSTEM
@@ -729,26 +1062,22 @@
             });
         }
 
-        // Initial connection message
         scheduleEvent(1, () => {
             addChatMessage('[SERVER] Welcome to ' + mapData[gameState.currentMap].displayName, 'system');
-            addChatMessage('[SERVER] Players online: 1/8', 'system');
+            addChatMessage('[SERVER] Players: 1/8', 'system');
         });
 
-        // First weird event - footsteps
         scheduleEvent(8, () => {
-            addChatMessage('[SERVER] *distant footsteps echo*', 'system');
+            addChatMessage('[SERVER] *distant footsteps*', 'system');
             playSound('footstep', 0.3);
         });
 
-        // Player joins
         scheduleEvent(15, () => {
-            addChatMessage('[SERVER] Player "john_doe" joined the game', 'system');
+            addChatMessage('[SERVER] "john_doe" joined', 'system');
             updatePlayerCount(2);
             playSound('join', 0.4);
         });
 
-        // Chat from ghost player
         scheduleEvent(20, () => {
             addChatMessage('john_doe: hello?', 'player');
         });
@@ -757,9 +1086,8 @@
             addChatMessage('john_doe: can you hear me?', 'player');
         });
 
-        // Eerie message
         scheduleEvent(32, () => {
-            addChatMessage('[SERVER] *voice message received*', 'warning');
+            addChatMessage('[SERVER] *voice received*', 'warning');
             playSound('static', 0.5);
         });
 
@@ -768,44 +1096,38 @@
             glitchScreen();
         });
 
-        // Player count fluctuation
         scheduleEvent(40, () => {
             updatePlayerCount(3);
-            addChatMessage('[SERVER] 2 more players joined', 'system');
+            addChatMessage('[SERVER] 2 joined', 'system');
         });
 
         scheduleEvent(42, () => {
             updatePlayerCount(1);
-            addChatMessage('[SERVER] Players disconnected unexpectedly', 'system');
+            addChatMessage('[SERVER] Disconnected', 'system');
         });
 
-        // Spooky event - objects moving
         scheduleEvent(50, () => {
-            addChatMessage('[SERVER] *sounds of objects being moved*', 'system');
+            addChatMessage('[SERVER] *objects moving*', 'system');
             playSound('crash', 0.6);
             glitchScreen();
         });
 
-        // Reality distortion
         scheduleEvent(65, () => {
-            addChatMessage('[SERVER] [SYSTEM MALFUNCTION]', 'warning');
+            addChatMessage('[SERVER] [MALFUNCTION]', 'warning');
             addChatMessage('john_doe: turn around', 'ghost');
             glitchScreen();
             enableSpectatorMode();
             playSound('static', 0.7);
         });
 
-        // The final message
         scheduleEvent(75, () => {
-            addChatMessage('[SERVER] ??? : you are not alone', 'ghost');
+            addChatMessage('[SERVER] ??? : not alone', 'ghost');
             glitchScreen();
             playSound('scream', 0.8);
         });
 
-        // Loop detection
         scheduleEvent(90, () => {
-            addChatMessage('[SERVER] Connection reset by administrator', 'system');
-            addChatMessage('[SERVER] Rejoining...', 'system');
+            addChatMessage('[SERVER] Reset', 'system');
             resetGame();
         });
 
@@ -912,29 +1234,30 @@
         const radarCtx = radarCanvas.getContext('2d');
 
         function drawRadar() {
+            const size = radarCanvas.width;
+            const center = size / 2;
+            
             radarCtx.fillStyle = '#001100';
-            radarCtx.fillRect(0, 0, 150, 150);
+            radarCtx.fillRect(0, 0, size, size);
 
             radarCtx.strokeStyle = '#00ff00';
             radarCtx.lineWidth = 1;
             radarCtx.beginPath();
-            radarCtx.arc(75, 75, 70, 0, Math.PI * 2);
+            radarCtx.arc(center, center, size * 0.45, 0, Math.PI * 2);
             radarCtx.stroke();
 
-            // Player position
             radarCtx.fillStyle = '#00ff00';
-            radarCtx.fillRect(73, 73, 4, 4);
+            radarCtx.fillRect(center - 2, center - 2, 4, 4);
 
-            // Direction indicator
             const dir = new THREE.Vector3();
             camera.getWorldDirection(dir);
             const angle = Math.atan2(dir.x, dir.z);
-            const endX = 75 + Math.sin(angle) * 30;
-            const endY = 75 + Math.cos(angle) * 30;
+            const endX = center + Math.sin(angle) * size * 0.2;
+            const endY = center + Math.cos(angle) * size * 0.2;
             radarCtx.strokeStyle = '#ffff00';
             radarCtx.lineWidth = 2;
             radarCtx.beginPath();
-            radarCtx.moveTo(75, 75);
+            radarCtx.moveTo(center, center);
             radarCtx.lineTo(endX, endY);
             radarCtx.stroke();
         }
@@ -959,10 +1282,10 @@
         const joinButton = document.getElementById('join-button');
 
         const servers = [
-            { name: 'NA_CTF_01', map: 'ctf_empty', players: '1/8', desc: 'Capture The Flag - Empty' },
-            { name: 'EU_DEATHMATCH_02', map: 'c_map1', players: '0/16', desc: 'Deathmatch - Industrial' },
-            { name: 'ASIA_TEAM_03', map: 'ctf_empty', players: '0/8', desc: 'Team Match - Empty' },
-            { name: 'PRIVATE_SERVER_404', map: 'unknown', players: '?/?', desc: '[PRIVATE]' }
+            { name: 'NA_CTF_01', map: 'ctf_empty', players: '1/8', desc: 'CTF - Empty' },
+            { name: 'EU_DM_02', map: 'c_map1', players: '0/16', desc: 'Deathmatch' },
+            { name: 'ASIA_TM_03', map: 'ctf_empty', players: '0/8', desc: 'Team Match' },
+            { name: 'PRIVATE_404', map: 'unknown', players: '?/?', desc: '[PRIVATE]' }
         ];
 
         let selectedServer = 0;
@@ -974,8 +1297,8 @@
                 item.className = `server-item ${idx === selectedServer ? 'selected' : ''}`;
                 item.innerHTML = `
                     <div class="server-name">${srv.name}</div>
-                    <div class="server-info">${srv.map} | Players: ${srv.players}</div>
-                    <div class="server-info" style="font-size: 0.8rem; color: #00aa00;">${srv.desc}</div>
+                    <div class="server-info">${srv.map} | ${srv.players}</div>
+                    <div class="server-info">${srv.desc}</div>
                 `;
                 item.addEventListener('click', () => {
                     selectedServer = idx;
@@ -993,7 +1316,7 @@
             document.getElementById('server-name').textContent = server.name;
             document.getElementById('map-name').textContent = server.map;
             controls.lock();
-            addChatMessage(`[CLIENT] Connecting to ${server.name}...`, 'system');
+            addChatMessage(`[CLIENT] Connecting...`, 'system');
         });
 
         // ============================================
@@ -1012,7 +1335,6 @@
             const delta = clock.getDelta();
             gameState.timeElapsed += delta;
 
-            // Process event timeline
             eventTimeline.forEach(evt => {
                 if (!evt.triggered && gameState.timeElapsed >= evt.trigger) {
                     evt.triggered = true;
@@ -1020,31 +1342,24 @@
                 }
             });
 
-            // Player movement
             if (controls.isLocked === true && !gameState.isSpectator) {
                 velocity.x -= velocity.x * 10.0 * delta;
                 velocity.z -= velocity.z * 10.0 * delta;
 
-                const direction = new THREE.Vector3();
-                direction.z = Number(keys['w']) - Number(keys['s']);
-                direction.x = Number(keys['d']) - Number(keys['a']);
-                direction.normalize();
+                let moveX = Number(keys['d']) - Number(keys['a']) + joystickX;
+                let moveZ = Number(keys['w']) - Number(keys['s']) + joystickY;
 
-                if (keys['w'] || keys['s']) velocity.z -= direction.z * 50.0 * delta;
-                if (keys['a'] || keys['d']) velocity.x -= direction.x * 50.0 * delta;
+                if (moveZ !== 0) velocity.z -= moveZ * 50.0 * delta;
+                if (moveX !== 0) velocity.x -= moveX * 50.0 * delta;
 
                 controls.moveRight(-velocity.x * delta);
                 controls.moveForward(-velocity.z * delta);
 
-                // Clamp position
                 camera.position.x = Math.max(-80, Math.min(80, camera.position.x));
                 camera.position.z = Math.max(-80, Math.min(80, camera.position.z));
             }
 
-            // Draw radar
             drawRadar();
-
-            // Render
             renderer.render(scene, camera);
         }
 
@@ -1055,6 +1370,15 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Prevent zoom on double tap
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault();
         });
     </script>
 </body>
